@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meesho AutoListing Pro</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <!-- Header -->
+    <header class="popup-header">
+      <div class="brand">
+        <div class="logo-badge">⚡</div>
+        <div class="title-wrap">
+          <h1 class="brand-title">Meesho AutoListing</h1>
+          <span class="brand-sub">Catalog Autofill & Sidebar</span>
+        </div>
+      </div>
+      <div id="page-status-pill" class="status-pill checking">
+        <span class="status-dot"></span>
+        <span class="status-text">Scanning...</span>
+      </div>
+    </header>
+
+    <!-- Main Sidebar Launch Banner -->
+    <button id="btn-toggle-page-sidebar" class="sidebar-launch-btn">
+      <span class="launch-icon">⚡</span>
+      <div class="launch-text">
+        <span class="launch-title">Open On-Page Sidebar</span>
+        <span class="launch-desc">Docked assistant on Meesho page</span>
+      </div>
+      <span class="launch-arrow">▶</span>
+    </button>
+
+    <!-- Profile Selector -->
+    <section class="section profile-selector-section">
+      <div class="section-label-row">
+        <label for="profile-select" class="section-label">Active Profile</label>
+        <span id="profile-count-tag" class="count-tag">0 Profiles</span>
+      </div>
+      <div class="select-row">
+        <select id="profile-select" class="custom-select">
+          <!-- Populated dynamically -->
+        </select>
+        <button id="btn-quick-new" class="icon-btn" title="Create New Profile">＋</button>
+      </div>
+    </section>
+
+    <!-- Main Action Buttons -->
+    <section class="section actions-section">
+      <button id="btn-autofill" class="btn-primary">
+        <span class="btn-icon">⚡</span>
+        <span class="btn-text">One-Click Autofill Form</span>
+      </button>
+
+      <div class="action-grid">
+        <button id="btn-capture" class="btn-secondary" title="Capture ALL fields from active Meesho page">
+          <span class="btn-icon">📥</span>
+          <span>Capture All Fields</span>
+        </button>
+        <button id="btn-train" class="btn-secondary" title="Click page fields to train">
+          <span class="btn-icon">🎯</span>
+          <span>Train Fields</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Status Message Banner -->
+    <div id="status-banner" class="status-banner idle">
+      Ready to populate Meesho catalog listing
+    </div>
+
+    <!-- Safety / Manual Control Notice -->
+    <div class="safety-badge">
+      <span class="shield-icon">🛡️</span>
+      <span>Manual Control: AutoListing will never auto-submit your listing. Always review before publishing.</span>
+    </div>
+
+    <!-- Footer Links -->
+    <footer class="popup-footer">
+      <button id="btn-open-options" class="footer-btn">
+        <span>⚙️</span> Profile Manager
+      </button>
+      <button id="btn-open-sandbox" class="footer-btn sandbox-btn" title="Open mock listing form to test extension features">
+        <span>🧪</span> Test Sandbox
+      </button>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

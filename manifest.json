@@ -1,0 +1,67 @@
+{
+  "manifest_version": 3,
+  "name": "Meesho AutoListing Pro - Fast Catalog Autofill",
+  "version": "1.2.0",
+  "description": "Accelerate product listings on the Meesho Supplier Panel with one-click autofill, full-form capture, and multi-category profiles.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_title": "Toggle Meesho AutoListing Sidebar"
+  },
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": true
+  },
+  "permissions": [
+    "storage",
+    "tabs",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "*://supplier.meesho.com/*",
+    "*://*.meesho.com/*",
+    "*://localhost/*",
+    "*://127.0.0.1/*",
+    "file:///*"
+  ],
+  "background": {
+    "service_worker": "background/service-worker.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://supplier.meesho.com/*",
+        "*://*.meesho.com/*",
+        "*://localhost/*",
+        "*://127.0.0.1/*",
+        "file:///*"
+      ],
+      "js": [
+        "content/field-mapper.js",
+        "content/autofill-engine.js",
+        "content/training-mode.js",
+        "content/sidebar-dock.js",
+        "content/content.js"
+      ],
+      "css": [
+        "content/content.css"
+      ],
+      "run_at": "document_end"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "icons/*",
+        "test-page/*"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ]
+}

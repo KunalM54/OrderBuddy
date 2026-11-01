@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meesho Supplier Panel - Add Single Catalog (Test Simulation 34 Fields)</title>
+  <link rel="stylesheet" href="mock-page.css">
+</head>
+<body>
+  <!-- Top Supplier Bar Simulation -->
+  <header class="meesho-nav">
+    <div class="nav-left">
+      <div class="meesho-logo">meesho <span>Supplier</span></div>
+      <span class="catalog-badge">&lt; Add Single Catalog</span>
+    </div>
+    <div class="nav-right">
+      <span class="user-badge">Seller: ISHA343 INTERPRISE</span>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="container">
+    <div class="guide-banner">
+      <div class="guide-icon">⚡</div>
+      <div class="guide-content">
+        <h3>Meesho AutoListing Pro - 34 Field Precision Verification Sandbox</h3>
+        <p>
+          This sandbox simulates the exact <strong>34 fields</strong> of the Meesho Single Catalog Upload page (Baby Godadi / Apparel).
+          Click the extension icon in your Chrome toolbar to open the docked sidebar, select or capture your profile, and click <strong>"One-Click Autofill Form"</strong> to achieve <strong>100% (34 of 34) accuracy</strong>!
+        </p>
+      </div>
+    </div>
+
+    <!-- Form Container -->
+    <form id="meesho-listing-form" class="listing-form">
+      <!-- Section 1: Product, Size and Inventory -->
+      <section class="form-section">
+        <h2 class="section-title">Product, Size and Inventory</h2>
+        
+        <div class="grid-2">
+          <div class="form-field">
+            <label for="gst-select">GST * ⓘ</label>
+            <select id="gst-select" name="gst" class="form-control">
+              <option value="">Select</option>
+              <option value="0%">0%</option>
+              <option value="3%">3%</option>
+              <option value="5%">5% (Apparel, textiles, sarees, footwear)</option>
+              <option value="12%">12%</option>
+              <option value="18%">18%</option>
+              <option value="28%">28%</option>
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label for="hsn-code-select">HSN Code * ⓘ</label>
+            <select id="hsn-code-select" name="hsn_code" class="form-control">
+              <option value="">Select</option>
+              <option value="630492">630492 - Bed linen, table linen, toilet linen and kitchen linen</option>
+              <option value="5208">5208 - Woven fabrics of cotton</option>
+              <option value="6204">6204 - Women's or girls' suits, ensembles, jackets</option>
+            </select>
+            <span class="field-hint" style="color:#5c3bfe; cursor:pointer;">Find Relevant HSN Code &gt;</span>
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-top: 14px;">
+          <div class="form-field">
+            <label for="net-weight-input">Net Weight (gms) * ⓘ</label>
+            <input type="text" id="net-weight-input" name="net_weight_gms" placeholder="Enter Net Weight (gms)" class="form-control" value="250">
+          </div>
+
+          <div class="form-field">
+            <label for="style-code-input">Style code/ Product ID (optional) ⓘ</label>
+            <input type="text" id="style-code-input" name="style_code_product_id" placeholder="Enter Style code" class="form-control" value="Micro5_8">
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-top: 14px;">
+          <div class="form-field">
+            <label for="product-name-input">Product Name * ⓘ</label>
+            <input type="text" id="product-name-input" name="product_name" placeholder="Enter Product Name" class="form-control" value="New Born Baby Godadi | Pack of 5">
+          </div>
+
+          <div class="form-field">
+            <label for="size-select-1">Size *</label>
+            <select id="size-select-1" name="size" class="form-control">
+              <option value="">Select</option>
+              <option value="Free Size">Free Size</option>
+              <option value="0-3 Months">0-3 Months</option>
+              <option value="3-6 Months">3-6 Months</option>
+              <option value="Pack of 5">Pack of 5</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 2: Pricing Details -->
+      <section class="form-section">
+        <h2 class="section-title">Pricing Details</h2>
+        <div class="grid-3">
+          <div class="form-field">
+            <label for="meesho-price-input">Meesho Price (₹) *</label>
+            <input type="number" id="meesho-price-input" name="meesho_price" placeholder="Enter customer price" class="form-control" value="280">
+          </div>
+
+          <div class="form-field">
+            <label for="wrong-return-price-input">Wrong/Defective Return Price (₹) *</label>
+            <input type="number" id="wrong-return-price-input" name="wrong_return_price" placeholder="Discounted price" class="form-control" value="279">
+          </div>
+
+          <div class="form-field">
+            <label for="mrp-input">Maximum Retail Price (MRP ₹) *</label>
+            <input type="number" id="mrp-input" name="mrp" placeholder="Maximum retail price" class="form-control" value="999">
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 3: Product Details (14 Dropdowns & Attributes) -->
+      <section class="form-section">
+        <h2 class="section-title">Product Details</h2>
+        
+        <div class="grid-2">
+          <div class="form-field">
+            <label for="care-instructions-select">Care Instructions *</label>
+            <select id="care-instructions-select" name="care_instructions" class="form-control">
+              <option value="">Select</option>
+              <option value="Machine Wash">Machine Wash</option>
+              <option value="Hand Wash">Hand Wash</option>
+              <option value="Dry Clean Only">Dry Clean Only</option>
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label for="closure-type-select">Closure Type *</label>
+            <select id="closure-type-select" name="closure_type" class="form-control">
+              <option value="">Select</option>
+              <option value="Knots">Knots</option>
+              <option value="Button">Button</option>
+              <option value="Zipper">Zipper</option>
+              <option value="Elastic">Elastic</option>
+              <option value="Not Required">Not Required</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-top: 14px;">
+          <div class="form-field">
+            <label for="color-select">Color *</label>
+            <select id="color-select" name="color" class="form-control">
+              <option value="">Select</option>
+              <option value="Multicolor">Multicolor</option>
+              <option value="Multi-Color">Multi-Color</option>
+              <option value="Blue">Blue</option>
+              <option value="Pink">Pink</option>
+              <option value="Yellow">Yellow</option>
+              <option value="White">White</option>
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label for="filling-material-select">Filling Material *</label>
+            <select id="filling-material-select" name="filling_material" class="form-control">
+              <option value="">Select</option>
+              <option value="Cotton">Cotton</option>
+              <option value="Foam">Foam</option>
+              <option value="Microfiber">Microfiber</option>
+              <option value="Polyester">Polyester</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-top: 14px;">
+          <div class="form-field">
+            <label for="generic-name-select">Generic Name * ⓘ</label>
+            <select id="generic-name-select" name="generic_name" class="form-control">
+              <option value="">Select</option>
+              <option value="Godadi">Godadi</option>
+              <option value="Baby Bedding">Baby Bedding</option>
+              <option value="Baby Mattress">Baby Mattress</option>
+              <option value="Mattress Protector">Mattress Protector</option>
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label for="material-select">Material *</label>
+            <select id="material-select" name="material" class="form-control">
+              <option value="">Select</option>
+              <option value="Pure Cotton">Pure Cotton</option>
+              <option value="Cotton Blend">Cotton Blend</option>
+              <option value="Hosiery Cotton">Hosiery Cotton</option>
+              <option value="Velvet">Velvet</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-top: 14px;">
+          <div class="form-field">
+            <label for="net-quantity-select">Net Quantity (N) * ⓘ</label>
+            <select id="net-quantity-select" name="net_quantity" class="form-control">
+              <option value="">Select</option>
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="Pack of 5">Pack of 5</option>
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label for="pattern-select">Pattern *</label>
+            <select id="pattern-select" name="pattern" class="form-control">
+              <option value="">Select</option>
+              <option value="Printed">Printed</option>
+              <option value="Solid">Solid</option>
+              <option value="Cartoon">Cartoon</option>
+              <option value="Striped">Striped</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-top: 14px;">
+          <div class="form-field">
+            <label for="product-breadth-select">Product Breadth * ⓘ</label>
+            <select id="product-breadth-select" name="product_breadth" class="form-control">
+              <option value="">Select</option>
+              <option value="50">50</option>
+              <option value="45">45</option>
+              <option value="60">60</option>
+              <option value="75">75</option>
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label for="product-height-select">Product Height * ⓘ</label>
+            <select id="product-height-select" name="product_height" class="form-control">
+              <option value="">Select</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="5">5</option>
+              <option value="10">10</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-top: 14px;">
+          <div class="form-field">
+            <label for="product-length-select">Product Length * ⓘ</label>
+            <select id="product-length-select" name="product_length" class="form-control">
+              <option value="">Select</option>
+              <option value="75">75</option>
+              <option value="80">80</option>
+              <option value="90">90</option>
+              <option value="100">100</option>
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label for="product-unit-select">Product Unit * ⓘ</label>
+            <select id="product-unit-select" name="product_unit" class="form-control">
+              <option value="">Select</option>
+              <option value="cm">cm</option>
+              <option value="inch">inch</option>
+              <option value="m">m</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-top: 14px;">
+          <div class="form-field">
+            <label for="product-weight-select">Product Weight *</label>
+            <select id="product-weight-select" name="product_weight" class="form-control">
+              <option value="">Select</option>
+              <option value="250">250</option>
+              <option value="250 gms">250 gms</option>
+              <option value="300">300</option>
+              <option value="500">500</option>
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label for="size-variation-select">Size Variation *</label>
+            <select id="size-variation-select" name="size_variation" class="form-control">
+              <option value="">Select</option>
+              <option value="Free Size">Free Size</option>
+              <option value="Pack of 5">Pack of 5</option>
+              <option value="Standard">Standard</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 4: Compliance & Logistics -->
+      <section class="form-section">
+        <h2 class="section-title">Compliance &amp; Logistics</h2>
+        <div class="grid-2">
+          <div class="form-field">
+            <label for="importer-name-input">Enter Importer Name</label>
+            <input type="text" id="importer-name-input" name="importer_name" placeholder="Enter Importer Name" class="form-control" value="Not Required">
+          </div>
+
+          <div class="form-field">
+            <label for="mfg-name-input">Enter Manufacturer Name</label>
+            <input type="text" id="mfg-name-input" name="manufacturer_name" placeholder="Enter Manufacturer Name" class="form-control" value="ISHA343 INTERPRISE">
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-top: 14px;">
+          <div class="form-field">
+            <label for="packer-details-input">Packer Details</label>
+            <textarea id="packer-details-input" name="packer_details" rows="2" class="form-control" placeholder="Enter Packer Details">ISHA343 INTERPRISE, Surat, Gujarat</textarea>
+          </div>
+
+          <div class="form-field">
+            <label for="origin-select">Country of Origin *</label>
+            <select id="origin-select" name="country_of_origin" class="form-control">
+              <option value="India">India</option>
+              <option value="China">China</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 5: Additional Listing Attributes -->
+      <section class="form-section">
+        <h2 class="section-title">Additional Attributes &amp; Specifications</h2>
+        <div class="grid-3">
+          <div class="form-field">
+            <label for="occasion-select">Occasion</label>
+            <select id="occasion-select" name="occasion" class="form-control">
+              <option value="">Select</option>
+              <option value="Daily Use">Daily Use</option>
+              <option value="Casual">Casual</option>
+              <option value="Festive">Festive</option>
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label for="multipack-select">Multipack</label>
+            <select id="multipack-select" name="multipack" class="form-control">
+              <option value="">Select</option>
+              <option value="Yes">Yes</option>
+              <option value="No">No</option>
+              <option value="5">5</option>
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label for="transparency-select">Transparency</label>
+            <select id="transparency-select" name="transparency" class="form-control">
+              <option value="">Select</option>
+              <option value="Opaque">Opaque</option>
+              <option value="Semi-Transparent">Semi-Transparent</option>
+              <option value="Transparent">Transparent</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid-3" style="margin-top: 14px;">
+          <div class="form-field">
+            <label for="print-type-select">Print or Pattern Type</label>
+            <select id="print-type-select" name="print_pattern_type" class="form-control">
+              <option value="">Select</option>
+              <option value="Cartoon Characters">Cartoon Characters</option>
+              <option value="Floral">Floral</option>
+              <option value="Geometric">Geometric</option>
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label for="wash-care-select">Wash Care</label>
+            <select id="wash-care-select" name="wash_care" class="form-control">
+              <option value="">Select</option>
+              <option value="Hand Wash Recommended">Hand Wash Recommended</option>
+              <option value="Machine Washable">Machine Washable</option>
+              <option value="Dry Clean">Dry Clean</option>
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label for="brand-code-input">Brand / Seller Code</label>
+            <input type="text" id="brand-code-input" name="brand_seller_code" placeholder="Enter Brand/Seller Code" class="form-control" value="ISHA343">
+          </div>
+        </div>
+
+        <div class="form-field" style="margin-top: 14px;">
+          <label for="desc-textarea">Product Description *</label>
+          <textarea id="desc-textarea" name="description" rows="3" class="form-control" placeholder="Enter complete product description">Premium Quality New Born Baby Godadi made from 100% Pure Cotton fabric with soft cotton filling. Set of 5 comfortable and washable baby mattresses.</textarea>
+        </div>
+      </section>
+
+      <!-- Form Actions (Manual Submission Notice) -->
+      <div class="form-actions-bar">
+        <button type="button" id="btn-mock-clear" class="btn-mock-cancel">Clear Form</button>
+        <div class="submission-group">
+          <span class="manual-notice">🛡️ AutoListing never clicks this button. Review before manual submission.</span>
+          <button type="submit" id="btn-mock-submit" class="btn-mock-submit">Submit Catalog to QC</button>
+        </div>
+      </div>
+    </form>
+  </main>
+
+  <script>
+    const form = document.getElementById("meesho-listing-form");
+    form.addEventListener("submit", (e) => e.preventDefault());
+
+    document.getElementById("btn-mock-clear").addEventListener("click", () => {
+      form.reset();
+    });
+
+    document.getElementById("btn-mock-submit").addEventListener("click", () => {
+      alert("Catalog submission triggered manually by seller! Validation OK.");
+    });
+  </script>
+</body>
+</html>
