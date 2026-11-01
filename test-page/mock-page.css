@@ -232,3 +232,100 @@ body {
 .btn-mock-submit:hover {
   background: var(--meesho-pink-dark);
 }
+
+/* Custom React Searchable Dropdown Simulation (Meesho Style) */
+.meesho-dropdown-group {
+  position: relative;
+}
+
+.meesho-react-dropdown {
+  width: 100%;
+  height: 38px;
+  padding: 8px 12px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+  font-size: 13px;
+  color: var(--text-dark);
+  transition: border-color 0.15s;
+}
+
+.meesho-react-dropdown:hover,
+.meesho-react-dropdown:focus {
+  border-color: #5c3bfe;
+  outline: none;
+}
+
+.meesho-react-dropdown[aria-expanded="true"] {
+  border-color: #5c3bfe;
+  box-shadow: 0 0 0 2px rgba(92, 59, 254, 0.15);
+}
+
+.dropdown-chevron {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.meesho-dropdown-popover {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.search-box-wrap {
+  padding: 8px 10px;
+  border-bottom: 1px solid #f1f3f5;
+  background: #ffffff;
+}
+
+.search-box-input {
+  width: 100%;
+  height: 32px;
+  padding: 4px 10px;
+  font-size: 13px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  outline: none;
+}
+
+.search-box-input:focus {
+  border-color: #5c3bfe;
+}
+
+.dropdown-options-list {
+  max-height: 180px;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.option-row {
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #374151;
+  cursor: pointer;
+  transition: background-color 0.1s;
+}
+
+.option-row:hover {
+  background-color: #f3f4f6;
+  color: #111827;
+}
+
+.option-row.selected {
+  background-color: #ede9fe;
+  color: #5c3bfe;
+  font-weight: 600;
+}
+

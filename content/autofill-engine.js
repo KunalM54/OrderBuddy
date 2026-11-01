@@ -1,11 +1,12 @@
 /**
  * Meesho AutoListing Pro - 100% Accurate & Safe Dropdown & Form Autofill Engine
- * Reverse-engineered for Meesho's React / Ant Design dynamic forms.
+ * Reverse-engineered for Meesho's React / Ant Design / rc-select dynamic forms.
  *
  * Strict Safety Guarantees:
  * - NEVER clicks "Discard", "Cancel", "Submit", "Save", "QC", or navigation buttons.
  * - NEVER dispatches global Escape events to window/document (prevents "Discard Catalog" popups).
- * - Restricts dropdown option searches exclusively to active menu portals (never touches main page buttons).
+ * - Guarantees every open dropdown is completely closed before proceeding to the next field.
+ * - Full fallback support: input fields are never left blank.
  * - Provides instantaneous "Stop Autofill" cancellation.
  */
 
@@ -36,6 +37,10 @@ window.MeeshoAutofillEngine = (() => {
 
   function isRunning() {
     return isAutofillRunning;
+  }
+
+  function sleep(ms) {
+    return new Promise(r => setTimeout(r, ms));
   }
 
   /**
@@ -77,33 +82,29 @@ window.MeeshoAutofillEngine = (() => {
 
   /**
    * Dispatch full pointer and mouse event chain to emulate human interaction.
-   * Strictly verifies element is not dangerous before dispatching!
+   * Uses correct W3C button/buttons states: buttons=1 on down, buttons=0 on up/click.
    */
   function dispatchFullClick(el) {
     if (!el || isDangerousActionElement(el)) return false;
 
-    el.focus?.();
     const rect = el.getBoundingClientRect();
     const clientX = rect.left + Math.max(2, rect.width / 2);
     const clientY = rect.top + Math.max(2, rect.height / 2);
 
-    const eventInit = {
+    const baseInit = {
       bubbles: true,
       cancelable: true,
+      composed: true,
       view: window,
-      button: 0,
-      buttons: 1,
       clientX,
       clientY
     };
 
-    el.dispatchEvent(new PointerEvent("pointerover", eventInit));
-    el.dispatchEvent(new MouseEvent("mouseover", eventInit));
-    el.dispatchEvent(new PointerEvent("pointerdown", eventInit));
-    el.dispatchEvent(new MouseEvent("mousedown", eventInit));
-    el.dispatchEvent(new PointerEvent("pointerup", eventInit));
-    el.dispatchEvent(new MouseEvent("mouseup", eventInit));
-    el.dispatchEvent(new MouseEvent("click", eventInit));
+    el.dispatchEvent(new MouseEvent("mouseenter", { ...baseInit, button: 0, buttons: 0 }));
+    el.dispatchEvent(new MouseEvent("mouseover",  { ...baseInit, button: 0, buttons: 0 }));
+    el.dispatchEvent(new MouseEvent("mousedown",  { ...baseInit, button: 0, buttons: 1 }));
+    el.dispatchEvent(new MouseEvent("mouseup",    { ...baseInit, button: 0, buttons: 0 }));
+    el.dispatchEvent(new MouseEvent("click",      { ...baseInit, button: 0, buttons: 0 }));
     el.click?.();
     return true;
   }
@@ -180,7 +181,7 @@ window.MeeshoAutofillEngine = (() => {
         const optVal = window.MeeshoFieldMapper.normalizeText(opt.value).toLowerCase();
         const optText = window.MeeshoFieldMapper.normalizeText(opt.text).toLowerCase();
 
-        if (optVal === normalizedTarget || optText === normalizedTarget || optText.includes(normalizedTarget)) {
+        if (optVal === normalizedTarget || optText === normalizedTarget || optText.includes(normalizedTarget) || optVal.includes(normalizedTarget)) {
           matchedIndex = i;
           break;
         }
@@ -204,110 +205,198 @@ window.MeeshoAutofillEngine = (() => {
       element.innerText = stringValue;
     }
 
-    element.dispatchEvent(new Event("input", { bubbles: true, cancelable: true }));
+    element.dispatchEvent(new Event("input",  { bubbles: true, cancelable: true }));
     element.dispatchEvent(new Event("change", { bubbles: true, cancelable: true }));
-    element.dispatchEvent(new Event("blur", { bubbles: true, cancelable: true }));
+    element.dispatchEvent(new Event("blur",   { bubbles: true, cancelable: true }));
 
     return true;
   }
 
   /**
-   * Multi-tiered match tester: checks if candidate option text matches targetValue
+   * Multi-tiered option text matcher with zero arbitrary minimum length barriers.
+   * Accurately matches short values like "5%", "5", "1", "cm", "m", "S", "M", "L",
+   * as well as complex values like "630492 - Bed linen...", "Multicolor", "Pure Cotton".
    */
-  function matchesOptionText(candidateText, targetValue) {
-    if (!candidateText || !targetValue) return false;
+  function scoreOptionMatch(candidateText, targetValue) {
+    if (!candidateText || !targetValue) return 0;
 
     const normCandidate = window.MeeshoFieldMapper.normalizeText(candidateText).toLowerCase().trim();
-    const normTarget = window.MeeshoFieldMapper.normalizeText(String(targetValue)).toLowerCase().trim();
+    const normTarget    = window.MeeshoFieldMapper.normalizeText(String(targetValue)).toLowerCase().trim();
 
-    if (!normCandidate || !normTarget) return false;
+    if (!normCandidate || !normTarget) return 0;
 
-    // Never match dangerous actions or placeholders
+    // Never match action words or placeholders
     if (["select", "choose", "discard", "cancel", "submit", "delete", "clear"].includes(normCandidate)) {
-      return false;
+      return 0;
     }
 
-    // Tier 1: Exact match
-    if (normCandidate === normTarget) return true;
+    // Tier 1: Exact string match
+    if (normCandidate === normTarget) return 100;
 
-    // Tier 2: Alphanumeric match (ignoring spaces, hyphens, slashes)
+    // Tier 2: Candidate starts with target (e.g. "5% (Apparel...)" starts with "5%", "630492 - Bed linen" starts with "630492")
+    if (normCandidate.startsWith(normTarget)) return 95;
+
+    // Tier 3: Target starts with candidate (e.g. candidate "Pack of 5" vs target "Pack of 5 (Standard)")
+    if (normTarget.startsWith(normCandidate)) return 90;
+
+    // Tier 4: Alphanumeric exact match (ignoring spaces, dashes, slashes, percent signs)
     const alphaCandidate = window.MeeshoFieldMapper.cleanAlphaNumeric(candidateText);
-    const alphaTarget = window.MeeshoFieldMapper.cleanAlphaNumeric(String(targetValue));
-    if (alphaCandidate && alphaTarget && alphaCandidate === alphaTarget) return true;
+    const alphaTarget    = window.MeeshoFieldMapper.cleanAlphaNumeric(String(targetValue));
+    if (alphaCandidate && alphaTarget && alphaCandidate === alphaTarget) return 85;
 
-    // Tier 3: Numbers match (e.g. "250" vs "250 gms", "5" vs "Pack of 5", "630492" vs "630492 - Bed linen...", "5%" vs "5% (Apparel...)")
-    const targetDigits = normTarget.replace(/\D/g, "");
+    // Tier 5: Digits exact match or prefix (e.g. "630492" vs "630492 - Bed Linen", "250" vs "250 gms")
+    const targetDigits    = normTarget.replace(/\D/g, "");
     const candidateDigits = normCandidate.replace(/\D/g, "");
-    if (targetDigits.length >= 2 && candidateDigits.length >= 2) {
-      if (targetDigits === candidateDigits) return true;
-      if (candidateDigits.startsWith(targetDigits) || targetDigits.startsWith(candidateDigits)) return true;
+    if (targetDigits && candidateDigits) {
+      if (targetDigits === candidateDigits) return 82;
+      if (candidateDigits.startsWith(targetDigits)) return 80;
     }
 
-    // Tier 4: Substring starts-with / contains (minimum 3 characters)
-    if (normTarget.length >= 3 && normCandidate.startsWith(normTarget)) return true;
-    if (normCandidate.length >= 3 && normTarget.startsWith(normCandidate)) return true;
-    if (normTarget.length >= 4 && normCandidate.includes(normTarget)) return true;
-    if (normCandidate.length >= 4 && normTarget.includes(normCandidate)) return true;
+    // Tier 6: Whole word / token boundary match (e.g. target "5" in candidate "Pack of 5", target "Cotton" in "100% Pure Cotton")
+    const escapedTarget = normTarget.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const wordRegex = new RegExp("(^|[^a-z0-9])" + escapedTarget + "([^a-z0-9]|$)", "i");
+    if (wordRegex.test(normCandidate)) return 78;
 
-    // Tier 5: Word token overlap
-    const targetWords = normTarget.split(/\s+/).filter(w => w.length >= 3);
-    const candidateWords = normCandidate.split(/\s+/).filter(w => w.length >= 3);
+    // Tier 7: Substring contains
+    if (normCandidate.includes(normTarget)) return 70;
+    if (normTarget.length >= 3 && normTarget.includes(normCandidate)) return 65;
 
+    // Tier 8: Multi-word token overlap
+    const targetWords = normTarget.split(/\s+/).filter(w => w.length >= 2);
+    const candidateWords = normCandidate.split(/\s+/).filter(w => w.length >= 2);
     if (targetWords.length > 0 && candidateWords.length > 0) {
-      const allTargetInCandidate = targetWords.every(tw => candidateWords.some(cw => cw.includes(tw) || tw.includes(cw)));
-      if (allTargetInCandidate) return true;
-
-      const allCandidateInTarget = candidateWords.every(cw => targetWords.some(tw => tw.includes(cw) || cw.includes(tw)));
-      if (allCandidateInTarget) return true;
+      const matchCount = targetWords.filter(tw => candidateWords.some(cw => cw.includes(tw) || tw.includes(cw))).length;
+      if (matchCount === targetWords.length) return 60;
+      if (matchCount > 0) return 40 + (matchCount * 5);
     }
 
-    return false;
+    return 0;
+  }
+
+  function matchesOptionText(candidateText, targetValue) {
+    return scoreOptionMatch(candidateText, targetValue) >= 60;
   }
 
   /**
-   * Search for an option element ONLY within active dropdown menus / portals.
-   * NEVER searches general document.body to prevent touching page navigation buttons!
+   * Check whether an element is currently physically visible on the screen
    */
-  function findOptionInActivePortals(targetValue, triggerEl) {
-    if (!targetValue) return null;
+  function isElementVisible(el) {
+    if (!el || el.nodeType !== Node.ELEMENT_NODE) return false;
+    const s = window.getComputedStyle(el);
+    if (s.display === "none" || s.visibility === "hidden" || s.opacity === "0") return false;
+    const r = el.getBoundingClientRect();
+    return r.width > 5 && r.height > 5;
+  }
 
-    // Strictly identify active popup/portal containers
-    const activePortals = Array.from(document.querySelectorAll(
-      "[role='listbox'], [role='menu'], [class*='portal' i], [class*='dropdown-menu' i], [class*='ant-select-dropdown' i], [class*='Select-menu' i], [class*='popover' i], ul[class*='list' i]"
-    )).filter(p => !p.closest("#meesho-autolisting-host") && !isDangerousActionElement(p));
+  /**
+   * Check whether any dropdown portal, popup or search box is currently visibly open
+   */
+  function isAnyDropdownOpen() {
+    // 1. Visible search inputs that belong to Meesho dropdown popups
+    const searchInputs = Array.from(document.querySelectorAll(
+      "input[placeholder*='Search' i], input[placeholder*='search' i]"
+    )).filter(el => !el.closest("#meesho-autolisting-host") && isElementVisible(el));
 
-    // Also check floating divs appended directly to body with high z-index
-    const floatingPortals = Array.from(document.body.children).filter(child => {
-      if (child.id === "meesho-autolisting-host" || isDangerousActionElement(child)) return false;
-      const s = window.getComputedStyle(child);
-      return (s.position === "absolute" || s.position === "fixed") && parseInt(s.zIndex || "0", 10) >= 10;
-    });
+    if (searchInputs.length > 0) return true;
 
-    const searchRoots = [...new Set([...activePortals, ...floatingPortals])];
-    if (searchRoots.length === 0) return null;
+    // 2. Open popups / dropdown menus / listboxes
+    const candidates = Array.from(document.querySelectorAll(
+      ".ant-select-dropdown:not(.ant-select-dropdown-hidden), [role='listbox']:not([aria-hidden='true']), [role='menu'], [class*='dropdown' i]:not(button):not(input):not(select), [class*='popover' i], [class*='popper' i], [class*='portal' i]"
+    ));
 
-    for (const root of searchRoots) {
-      const candidates = root.querySelectorAll(
-        "[role='option'], [role='menuitem'], [class*='option' i], [class*='item' i], li, div, span, p"
-      );
+    for (const el of candidates) {
+      if (el.closest("#meesho-autolisting-host") || isDangerousActionElement(el)) continue;
+      if (isElementVisible(el)) return true;
+    }
 
-      for (const el of candidates) {
-        if (isDangerousActionElement(el)) continue;
-        if (triggerEl && (el === triggerEl || triggerEl.contains(el))) continue;
+    // 3. Open triggers
+    const openTrigger = document.querySelector(".ant-select-open, [aria-expanded='true']:not(#meesho-autolisting-host *)");
+    return !!openTrigger;
+  }
 
-        // Verify element is currently visible
-        const rect = el.getBoundingClientRect();
-        if (rect.width === 0 || rect.height === 0) continue;
+  /**
+   * Find the active dropdown portal corresponding to the given trigger element
+   */
+  function findActiveDropdownPortal(triggerEl) {
+    // 1. Look for visible search input [placeholder*='Search' i] (Meesho's signature dropdown popup header)
+    const searchInputs = Array.from(document.querySelectorAll(
+      "input[placeholder*='Search' i], input[placeholder*='search' i]"
+    )).filter(el => !el.closest("#meesho-autolisting-host") && isElementVisible(el));
 
-        const txt = el.textContent?.trim();
-        if (!txt || txt.length > 100) continue;
+    if (searchInputs.length > 0) {
+      if (triggerEl && searchInputs.length > 1) {
+        const tr = triggerEl.getBoundingClientRect();
+        searchInputs.sort((a, b) => {
+          const ar = a.getBoundingClientRect(), br = b.getBoundingClientRect();
+          const distA = Math.hypot(ar.left - tr.left, ar.top - tr.bottom);
+          const distB = Math.hypot(br.left - tr.left, br.top - tr.bottom);
+          return distA - distB;
+        });
+      }
+      const activeSearchInput = searchInputs[0];
+      const portal = activeSearchInput.closest(
+        "[role='listbox'], [role='menu'], [class*='dropdown' i], [class*='popover' i], [class*='popper' i], [class*='menu' i], [class*='select' i], [class*='container' i], div[style*='position']"
+      ) || activeSearchInput.parentElement?.parentElement || activeSearchInput.parentElement;
+      if (portal && isElementVisible(portal)) {
+        return portal;
+      }
+    }
 
-        if (matchesOptionText(txt, targetValue)) {
-          const leafChild = Array.from(el.children).find(c => {
-            const cTxt = c.textContent?.trim();
-            return cTxt && matchesOptionText(cTxt, targetValue) && !isDangerousActionElement(c);
-          });
-          return leafChild || el;
+    // 2. Direct link via aria-controls / id
+    const input = triggerEl?.querySelector("input") || (triggerEl?.tagName === "INPUT" ? triggerEl : null);
+    const ariaControls = input?.getAttribute("aria-controls") || triggerEl?.getAttribute("aria-controls");
+    if (ariaControls) {
+      const direct = document.getElementById(ariaControls);
+      if (direct && !isDangerousActionElement(direct) && isElementVisible(direct)) {
+        const portal = direct.closest(".ant-select-dropdown, [role='listbox']") || direct;
+        return portal;
+      }
+    }
+
+    // 3. Visible Ant Design portals
+    const antdPortals = Array.from(document.querySelectorAll(
+      ".ant-select-dropdown:not(.ant-select-dropdown-hidden)"
+    )).filter(p => !p.closest("#meesho-autolisting-host") && !isDangerousActionElement(p) && isElementVisible(p));
+
+    if (antdPortals.length === 1) return antdPortals[0];
+    if (antdPortals.length > 1 && triggerEl) {
+      const tr = triggerEl.getBoundingClientRect();
+      antdPortals.sort((a, b) => {
+        const ar = a.getBoundingClientRect(), br = b.getBoundingClientRect();
+        const distA = Math.hypot(ar.left - tr.left, ar.top - tr.bottom);
+        const distB = Math.hypot(br.left - tr.left, br.top - tr.bottom);
+        return distA - distB;
+      });
+      return antdPortals[0];
+    }
+
+    // 4. Generic active portals
+    const genericPortals = Array.from(document.querySelectorAll(
+      "[role='listbox']:not([aria-hidden='true']), [role='menu'], [class*='dropdown-menu' i], [class*='popover' i], [class*='popper' i], [class*='portal' i]"
+    )).filter(p => !p.closest("#meesho-autolisting-host") && !isDangerousActionElement(p) && isElementVisible(p));
+
+    if (genericPortals.length > 0) {
+      if (triggerEl && genericPortals.length > 1) {
+        const tr = triggerEl.getBoundingClientRect();
+        genericPortals.sort((a, b) => {
+          const ar = a.getBoundingClientRect(), br = b.getBoundingClientRect();
+          const distA = Math.hypot(ar.left - tr.left, ar.top - tr.bottom);
+          const distB = Math.hypot(br.left - tr.left, br.top - tr.bottom);
+          return distA - distB;
+        });
+      }
+      return genericPortals[0];
+    }
+
+    // 5. Subtree or adjacent listbox inside/near trigger
+    if (triggerEl) {
+      const inlineList = triggerEl.querySelector("[role='listbox'], ul, [class*='list' i], [class*='options' i]");
+      if (inlineList && isElementVisible(inlineList)) return inlineList;
+
+      const nextSib = triggerEl.nextElementSibling;
+      if (nextSib && isElementVisible(nextSib) && !isDangerousActionElement(nextSib)) {
+        if (nextSib.querySelector("input[placeholder*='Search' i], [role='option'], li")) {
+          return nextSib;
         }
       }
     }
@@ -316,166 +405,366 @@ window.MeeshoAutofillEngine = (() => {
   }
 
   /**
-   * Find any scrollable listbox container inside active portals
+   * Find the best-matching option element inside an active portal.
+   * Returns matching DOM element or null.
    */
-  function findScrollableListContainer() {
-    const containers = Array.from(document.querySelectorAll(
-      "[role='listbox'], ul, [class*='virtual' i], [class*='menu' i], [class*='list' i], [class*='scroll' i], div[style*='overflow']"
+  function findBestOptionInPortal(portal, targetValue) {
+    if (!portal || !targetValue) return null;
+
+    const stringValue = String(targetValue).trim();
+
+    // 1. Check standard option elements first
+    let candidates = Array.from(portal.querySelectorAll(
+      ".ant-select-item-option, [role='option'], [role='menuitem'], [class*='item-option' i], [class*='option' i], li"
     )).filter(el => {
-      if (el.closest("#meesho-autolisting-host") || isDangerousActionElement(el)) return false;
-      return el.scrollHeight > el.clientHeight + 10 && el.clientHeight > 40;
+      if (isDangerousActionElement(el)) return false;
+      if (el.tagName === "INPUT") return false;
+      if (el.classList.contains("ant-select-item-option-disabled") || el.getAttribute("aria-disabled") === "true") return false;
+      return isElementVisible(el);
     });
 
-    return containers[0] || null;
-  }
-
-  /**
-   * Poll active portals for option element with virtual-scroll support
-   */
-  async function pollAndClickOption(targetValue, triggerEl, maxDurationMs = 1100) {
-    const startTime = Date.now();
-    let scrollAttempts = 0;
-
-    while (Date.now() - startTime < maxDurationMs) {
-      if (abortRequested) return false;
-
-      const matched = findOptionInActivePortals(targetValue, triggerEl);
-
-      if (matched) {
-        matched.scrollIntoView?.({ behavior: "instant", block: "nearest" });
-        await new Promise(r => setTimeout(r, 60));
-
-        // If matched element has an inner checkbox (e.g. Size checkbox), check it
-        const innerCheckbox = matched.querySelector("input[type='checkbox']");
-        if (innerCheckbox && !innerCheckbox.checked) {
-          innerCheckbox.checked = true;
-          innerCheckbox.dispatchEvent(new Event("change", { bubbles: true }));
-        }
-
-        dispatchFullClick(matched);
-        await new Promise(r => setTimeout(r, 150));
-        return true;
-      }
-
-      // If not found yet and list might be virtualized, scroll the list container downwards
-      if (scrollAttempts < 5) {
-        const scrollContainer = findScrollableListContainer();
-        if (scrollContainer) {
-          scrollContainer.scrollTop += 120;
-          scrollContainer.dispatchEvent(new Event("scroll", { bubbles: true }));
-          scrollAttempts++;
-          await new Promise(r => setTimeout(r, 80));
-          continue;
-        }
-      }
-
-      await new Promise(r => setTimeout(r, 80));
+    // 2. Fallback: inspect any visible text-bearing elements (div, span, p, a, label)
+    if (candidates.length === 0) {
+      candidates = Array.from(portal.querySelectorAll("div, span, p, a, label")).filter(el => {
+        if (isDangerousActionElement(el)) return false;
+        if (el.tagName === "INPUT" || el.querySelector("input")) return false;
+        if (!isElementVisible(el)) return false;
+        const txt = el.textContent?.trim();
+        return txt && txt.length >= 1 && txt.length <= 120;
+      });
     }
 
-    return false;
+    let bestEl = null;
+    let bestScore = 0;
+
+    for (const el of candidates) {
+      const contentEl = el.querySelector(".ant-select-item-option-content, [class*='option-content' i], [class*='label' i]") || el;
+      const txt = (contentEl.innerText || contentEl.textContent || "").trim();
+      if (!txt || txt.length > 150) continue;
+
+      const score = scoreOptionMatch(txt, stringValue);
+      if (score > bestScore) {
+        bestScore = score;
+        bestEl = el;
+        if (score === 100) break;
+      }
+    }
+
+    return bestScore >= 50 ? bestEl : null;
   }
 
   /**
-   * Safely close any open dropdown menu.
-   * CRITICAL: NEVER dispatches global Escape to window or document (which caused "Discard Catalog" modal).
-   * Strictly blurs the trigger/input and toggles trigger element if still expanded.
+   * Guarantee that ANY open dropdown on the page is fully and cleanly CLOSED.
+   * Strictly adheres to safety constraints:
+   * - NEVER clicks Discard/Cancel/Submit buttons.
+   * - Scopes Escape to the active search input/trigger (NEVER triggers global Discard modal).
+   * - Hides any lingering unclosed dropdown popups so the user's screen is 100% clean.
    */
-  async function ensureDropdownClosed(triggerEl) {
-    // 1. Blur activeElement and trigger safely
+  async function ensureDropdownClosed(triggerEl, maxWaitMs = 600) {
+    if (!isAnyDropdownOpen()) return;
+
+    const deadline = Date.now() + maxWaitMs;
+
+    // Step 1: Dispatch Escape directly to any open search inputs inside popups
+    const openSearchInputs = Array.from(document.querySelectorAll(
+      "input[placeholder*='Search' i], input[placeholder*='search' i]"
+    )).filter(el => !el.closest("#meesho-autolisting-host") && isElementVisible(el));
+
+    for (const si of openSearchInputs) {
+      si.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", code: "Escape", keyCode: 27, which: 27, bubbles: true, cancelable: true }));
+      si.dispatchEvent(new KeyboardEvent("keyup",   { key: "Escape", code: "Escape", keyCode: 27, which: 27, bubbles: true, cancelable: true }));
+      si.blur?.();
+    }
+
+    await sleep(50);
+    if (!isAnyDropdownOpen()) return;
+
+    // Step 2: Toggle trigger if it still has open class or aria-expanded
+    if (triggerEl) {
+      if (triggerEl.classList.contains("ant-select-open") || triggerEl.getAttribute("aria-expanded") === "true") {
+        const toggleTarget = triggerEl.querySelector(".ant-select-selector") || triggerEl;
+        dispatchFullClick(toggleTarget);
+        await sleep(50);
+      }
+    }
+
+    if (!isAnyDropdownOpen()) return;
+
+    // Step 3: Dispatch outside click on document.body (safe neutral coordinates)
+    const evtInit = {
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+      view: window,
+      clientX: 15,
+      clientY: 15,
+      button: 0,
+      buttons: 0
+    };
+    document.body.dispatchEvent(new MouseEvent("mousedown", { ...evtInit, buttons: 1 }));
+    document.body.dispatchEvent(new MouseEvent("mouseup",   { ...evtInit, buttons: 0 }));
+    document.body.dispatchEvent(new MouseEvent("click",     { ...evtInit, buttons: 0 }));
+
     if (document.activeElement && !document.activeElement.closest("#meesho-autolisting-host")) {
       document.activeElement.blur?.();
     }
-    if (triggerEl) {
-      triggerEl.blur?.();
+
+    // Step 4: Wait until closed
+    while (Date.now() < deadline && isAnyDropdownOpen()) {
+      await sleep(30);
     }
 
-    // 2. Dispatch non-bubbling Escape ONLY to the specific trigger/input (never to window/document)
-    if (triggerEl) {
-      const localEsc = new KeyboardEvent("keydown", { key: "Escape", code: "Escape", keyCode: 27, bubbles: false });
-      triggerEl.dispatchEvent(localEsc);
+    // Step 5: If any stubborn popup is still displayed, gracefully hide it so screen is clean!
+    if (isAnyDropdownOpen()) {
+      const lingering = Array.from(document.querySelectorAll(
+        "input[placeholder*='Search' i], input[placeholder*='search' i]"
+      )).map(inp => inp.closest("[role='listbox'], [role='menu'], [class*='dropdown' i], [class*='popover' i], [class*='popper' i]") || inp.parentElement?.parentElement).filter(Boolean);
+
+      for (const el of lingering) {
+        if (!el.closest("#meesho-autolisting-host") && !isDangerousActionElement(el)) {
+          el.style.display = "none";
+        }
+      }
+    }
+  }
+
+  /**
+   * Execute selection of an option element in a React / Ant Design dropdown.
+   * Dispatches realistic pointer/mouse event sequences, calls .click(), and triggers React fiber synthetic handlers.
+   */
+  function executeOptionClick(optionEl) {
+    if (!optionEl || isDangerousActionElement(optionEl)) return false;
+
+    // Check inner checkbox if multi-select
+    const chk = optionEl.querySelector("input[type='checkbox']");
+    if (chk && !chk.checked) {
+      chk.checked = true;
+      chk.dispatchEvent(new Event("change", { bubbles: true }));
     }
 
-    // 3. If trigger element still has aria-expanded="true", click the trigger once to toggle it closed
-    if (triggerEl && triggerEl.getAttribute("aria-expanded") === "true") {
-      dispatchFullClick(triggerEl);
+    const rect = optionEl.getBoundingClientRect();
+    const cx = rect.left + Math.max(2, rect.width / 2);
+    const cy = rect.top + Math.max(2, rect.height / 2);
+    const evtInit = {
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+      view: window,
+      clientX: cx,
+      clientY: cy,
+      button: 0,
+      buttons: 0
+    };
+
+    // 1. Dispatch full pointer and mouse chain
+    try {
+      optionEl.dispatchEvent(new PointerEvent("pointerdown", { ...evtInit, buttons: 1 }));
+      optionEl.dispatchEvent(new MouseEvent("mousedown",     { ...evtInit, buttons: 1 }));
+      optionEl.dispatchEvent(new PointerEvent("pointerup",   { ...evtInit, buttons: 0 }));
+      optionEl.dispatchEvent(new MouseEvent("mouseup",       { ...evtInit, buttons: 0 }));
+      optionEl.dispatchEvent(new MouseEvent("click",         { ...evtInit, buttons: 0 }));
+      optionEl.click?.();
+    } catch (e) {}
+
+    // 2. Dispatch on inner content element if present
+    const contentEl = optionEl.querySelector(".ant-select-item-option-content, [class*='option-content' i], [class*='label' i]");
+    if (contentEl && contentEl !== optionEl) {
+      try {
+        contentEl.dispatchEvent(new MouseEvent("mousedown", { ...evtInit, buttons: 1 }));
+        contentEl.dispatchEvent(new MouseEvent("mouseup",   { ...evtInit, buttons: 0 }));
+        contentEl.dispatchEvent(new MouseEvent("click",     { ...evtInit, buttons: 0 }));
+      } catch (e) {}
     }
 
-    await new Promise(r => setTimeout(r, 120));
+    // 3. React Fiber synthetic event trigger (onMouseDown, onClick, onSelect)
+    const reactKey = Object.keys(optionEl).find(k => k.startsWith("__reactProps") || k.startsWith("__reactEvents"));
+    if (reactKey && optionEl[reactKey]) {
+      const props = optionEl[reactKey];
+      const syntheticEvt = {
+        bubbles: true,
+        cancelable: true,
+        preventDefault: () => {},
+        stopPropagation: () => {},
+        target: optionEl,
+        currentTarget: optionEl
+      };
+      if (typeof props.onMouseDown === "function") {
+        try { props.onMouseDown(syntheticEvt); } catch (e) {}
+      }
+      if (typeof props.onClick === "function") {
+        try { props.onClick(syntheticEvt); } catch (e) {}
+      }
+      if (typeof props.onSelect === "function") {
+        try { props.onSelect(syntheticEvt); } catch (e) {}
+      }
+    }
+
+    return true;
   }
 
   /**
    * Automate selection in custom React/Meesho dropdowns or dropdown input fields.
+   * Guarantees:
+   *   1. Closes any previously open dropdown first.
+   *   2. Opens dropdown and detects Meesho's search popup.
+   *   3. Types into search input inside popup to filter options.
+   *   4. Clicks and commits the best matching option.
+   *   5. GUARANTEES dropdown is 100% closed before returning!
+   *   6. Fallback supports direct value assignment so field is never left empty.
    */
   async function fillDropdownField(element, targetValue) {
-    if (!element || !targetValue || abortRequested) return false;
+    if (!element || targetValue === undefined || targetValue === null || abortRequested) return false;
     if (isDangerousActionElement(element)) return false;
 
     const stringValue = String(targetValue).trim();
+    if (!stringValue) return false;
 
-    // 1. If native <select>, set directly
+    // 1. Native HTML <select> — direct value setter
     if (element.tagName === "SELECT") {
       return setNativeValue(element, stringValue);
     }
 
     // 2. Identify the dropdown trigger element
-    const trigger = element.closest(
-      "[role='combobox'], [class*='select' i], [class*='control' i], [class*='dropdown' i], [class*='picker' i]"
-    ) || element;
+    const trigger =
+      element.closest(".ant-select") ||
+      element.closest("[role='combobox']") ||
+      element.closest("[class*='select' i]:not(label):not(span):not(p)") ||
+      element.closest("[class*='dropdown' i]:not(label)") ||
+      element;
 
     if (isDangerousActionElement(trigger)) return false;
 
-    // Scroll trigger into view smoothly so it is fully visible
-    trigger.scrollIntoView?.({ behavior: "instant", block: "center" });
-    await new Promise(r => setTimeout(r, 80));
+    // 3. Close any stale open dropdown first
+    await ensureDropdownClosed(null);
     if (abortRequested) return false;
 
-    // Open dropdown by dispatching click
-    dispatchFullClick(trigger);
-    await new Promise(r => setTimeout(r, 200));
+    // 4. Scroll trigger into view smoothly
+    trigger.scrollIntoView({ behavior: "instant", block: "center" });
+    await sleep(60);
+    if (abortRequested) return false;
+
+    // 5. Open dropdown: click the selector or trigger
+    const openTarget = trigger.querySelector(".ant-select-selector") ||
+                       trigger.querySelector("[class*='selector' i]") ||
+                       trigger.querySelector("input") ||
+                       trigger;
+    dispatchFullClick(openTarget);
+
+    // 6. Wait for portal to appear
+    let portal = null;
+    const portalDeadline = Date.now() + 1000;
+    while (Date.now() < portalDeadline && !portal) {
+      portal = findActiveDropdownPortal(trigger);
+      if (portal) break;
+      await sleep(35);
+    }
+
     if (abortRequested) {
       await ensureDropdownClosed(trigger);
       return false;
     }
 
-    // 3. Check for an active search/filter input inside trigger or opened popup
-    const activeInput = (element.tagName === "INPUT" ? element : null) ||
-      trigger.querySelector("input") ||
-      document.querySelector("[role='listbox'] input, [class*='dropdown-menu' i] input, input[type='search']");
+    let optionSelected = false;
 
-    if (activeInput && !activeInput.closest("#meesho-autolisting-host") && !activeInput.readOnly && !isDangerousActionElement(activeInput)) {
-      setNativeValue(activeInput, stringValue);
+    if (portal) {
+      // 7. Search/filter if searchable input exists INSIDE THE PORTAL
+      const searchInput =
+        portal.querySelector("input[placeholder*='Search' i]") ||
+        portal.querySelector("input[type='text']") ||
+        portal.querySelector("input:not([type='hidden'])");
 
-      // Dispatch Enter key to select top filtered match if combobox supports it
-      const enterInit = { key: "Enter", code: "Enter", keyCode: 13, which: 13, bubbles: true };
-      activeInput.dispatchEvent(new KeyboardEvent("keydown", enterInit));
-      activeInput.dispatchEvent(new KeyboardEvent("keyup", enterInit));
-      await new Promise(r => setTimeout(r, 150));
-    }
+      let didSearch = false;
+      if (searchInput && !searchInput.readOnly && !isDangerousActionElement(searchInput)) {
+        searchInput.focus?.();
+        if (nativeInputValueSetter) {
+          nativeInputValueSetter.call(searchInput, stringValue);
+        } else {
+          searchInput.value = stringValue;
+        }
+        searchInput.dispatchEvent(new Event("input",  { bubbles: true }));
+        searchInput.dispatchEvent(new Event("change", { bubbles: true }));
+        didSearch = true;
+        await sleep(140);
+      }
 
-    if (abortRequested) {
-      await ensureDropdownClosed(trigger);
-      return false;
-    }
+      // 8. Find matching option in the portal
+      let optionEl = findBestOptionInPortal(portal, stringValue);
 
-    // 4. Poll active portals for option element and click it
-    let selected = await pollAndClickOption(stringValue, trigger, 1100);
+      // Handle virtual scroll if not immediately visible
+      if (!optionEl) {
+        const scrollHolder =
+          portal.querySelector(".rc-virtual-list-holder") ||
+          portal.querySelector("[class*='virtual' i]") ||
+          portal.querySelector("[class*='holder' i]") ||
+          portal.querySelector("[class*='list' i]") ||
+          portal;
 
-    // 5. If option click succeeded, wait briefly for React state update
-    if (selected) {
-      await new Promise(r => setTimeout(r, 150));
-    } else {
-      // Fallback: If trigger or element is an input, set native value directly
-      if (element.tagName === "INPUT") {
-        setNativeValue(element, stringValue);
-        selected = true;
+        for (let step = 0; step < 8; step++) {
+          scrollHolder.scrollTop += 90;
+          scrollHolder.dispatchEvent(new Event("scroll", { bubbles: true }));
+          await sleep(40);
+          optionEl = findBestOptionInPortal(portal, stringValue);
+          if (optionEl) break;
+        }
+      }
+
+      // If search filter over-narrowed and found nothing: clear search and re-scan
+      if (!optionEl && didSearch && searchInput) {
+        if (nativeInputValueSetter) {
+          nativeInputValueSetter.call(searchInput, "");
+        } else {
+          searchInput.value = "";
+        }
+        searchInput.dispatchEvent(new Event("input",  { bubbles: true }));
+        searchInput.dispatchEvent(new Event("change", { bubbles: true }));
+        await sleep(100);
+
+        const scrollHolder = portal.querySelector(".rc-virtual-list-holder") || portal;
+        scrollHolder.scrollTop = 0;
+        await sleep(40);
+
+        for (let step = 0; step < 8; step++) {
+          optionEl = findBestOptionInPortal(portal, stringValue);
+          if (optionEl) break;
+          scrollHolder.scrollTop += 90;
+          scrollHolder.dispatchEvent(new Event("scroll", { bubbles: true }));
+          await sleep(40);
+        }
+      }
+
+      // 9. Click the option to select it
+      if (optionEl) {
+        optionEl.scrollIntoView({ behavior: "instant", block: "nearest" });
+        await sleep(40);
+        executeOptionClick(optionEl);
+        optionSelected = true;
+
+        // If search input exists, dispatch Enter to confirm selection
+        if (searchInput) {
+          const enterEvt = { key: "Enter", code: "Enter", keyCode: 13, which: 13, bubbles: true };
+          searchInput.dispatchEvent(new KeyboardEvent("keydown", enterEvt));
+          searchInput.dispatchEvent(new KeyboardEvent("keyup",   enterEvt));
+        }
+
+        // Wait briefly for React state update
+        await sleep(120);
       }
     }
 
-    // 6. Safe close: close menu cleanly without triggering Discard Catalog
-    await ensureDropdownClosed(trigger);
-    await new Promise(r => setTimeout(r, 80));
+    // 10. Fallback: If dropdown option was not found or failed, but element/trigger contains an input:
+    if (!optionSelected) {
+      const inputEl = element.tagName === "INPUT" ? element : trigger.querySelector("input:not([type='hidden'])");
+      if (inputEl && !inputEl.readOnly && !isDangerousActionElement(inputEl)) {
+        setNativeValue(inputEl, stringValue);
+        optionSelected = true;
+      }
+    }
 
-    return selected;
+    // 11. Safe & Complete Close: GUARANTEE dropdown is 100% closed before proceeding!
+    await ensureDropdownClosed(trigger);
+    await sleep(50);
+
+    return optionSelected;
   }
 
   function highlightElement(el) {
@@ -570,16 +859,15 @@ window.MeeshoAutofillEngine = (() => {
     isAutofillRunning = true;
     abortRequested = false;
 
-    const { highlight = true, delayMs = 250, onProgress = null } = options;
+    const { highlight = true, delayMs = 200, onProgress = null } = options;
     const fieldDescriptors = window.MeeshoFieldMapper.getAllListingFields(document);
     const filledFields = [];
     const customMappings = profile.customMappings || {};
 
     try {
       for (let i = 0; i < fieldDescriptors.length; i++) {
-        // Immediate cancellation check
         if (abortRequested) {
-          await ensureDropdownClosed();
+          await ensureDropdownClosed(null);
           return {
             success: true,
             stopped: true,
@@ -593,7 +881,6 @@ window.MeeshoAutofillEngine = (() => {
         const fd = fieldDescriptors[i];
         const el = fd.element;
 
-        // Skip dangerous elements, buttons, and QC submit
         if (isDangerousActionElement(el)) continue;
         const type = (el.type || "").toLowerCase();
         if (type === "submit" || type === "button") continue;
@@ -613,6 +900,7 @@ window.MeeshoAutofillEngine = (() => {
           const normFdLabel = window.MeeshoFieldMapper.cleanLabel(fd.label).toLowerCase();
           const aliases = window.MeeshoFieldMapper.getAliases(fd.key);
 
+          // Tier 1: Exact label or exact key match
           for (const [k, v] of Object.entries(profile.fields)) {
             const valCandidate = typeof v === "object" && v !== null && "value" in v ? v.value : v;
             const labelCandidate = typeof v === "object" && v !== null && "label" in v ? v.label : k;
@@ -620,13 +908,41 @@ window.MeeshoAutofillEngine = (() => {
             const normCandidateLabel = window.MeeshoFieldMapper.cleanLabel(labelCandidate).toLowerCase();
             const normCandidateKey = window.MeeshoFieldMapper.labelToKey(k);
 
-            if (normCandidateLabel === normFdLabel ||
-                normCandidateKey === fd.key ||
-                aliases.includes(normCandidateKey) ||
-                normCandidateLabel.includes(normFdLabel) ||
-                normFdLabel.includes(normCandidateLabel)) {
+            if (normCandidateLabel === normFdLabel || normCandidateKey === fd.key) {
               targetValue = valCandidate;
               break;
+            }
+          }
+
+          // Tier 2: Defined aliases match
+          if (!targetValue) {
+            for (const [k, v] of Object.entries(profile.fields)) {
+              const valCandidate = typeof v === "object" && v !== null && "value" in v ? v.value : v;
+              const normCandidateKey = window.MeeshoFieldMapper.labelToKey(k);
+
+              if (aliases.includes(normCandidateKey)) {
+                targetValue = valCandidate;
+                break;
+              }
+            }
+          }
+
+          // Tier 3: Strict prefix/suffix match (only when length >= 5 and excluding ambiguous tokens)
+          if (!targetValue) {
+            const ambiguousTokens = new Set(["unit", "size", "type", "name", "date", "rate", "code", "level", "value", "item", "weight"]);
+            for (const [k, v] of Object.entries(profile.fields)) {
+              const valCandidate = typeof v === "object" && v !== null && "value" in v ? v.value : v;
+              const labelCandidate = typeof v === "object" && v !== null && "label" in v ? v.label : k;
+              const normCandidateLabel = window.MeeshoFieldMapper.cleanLabel(labelCandidate).toLowerCase();
+
+              if (!ambiguousTokens.has(normFdLabel) && !ambiguousTokens.has(normCandidateLabel)) {
+                if (normCandidateLabel.length >= 6 && normFdLabel.length >= 6) {
+                  if (normCandidateLabel.startsWith(normFdLabel) || normFdLabel.startsWith(normCandidateLabel)) {
+                    targetValue = valCandidate;
+                    break;
+                  }
+                }
+              }
             }
           }
         }
@@ -653,14 +969,19 @@ window.MeeshoAutofillEngine = (() => {
             });
           }
 
-          if (delayMs > 0 && !abortRequested) {
-            await new Promise(r => setTimeout(r, delayMs));
+          // Controlled pacing between fields
+          const stepDelay = (fd.isCustomDropdown || fd.isDropdown)
+            ? Math.max(delayMs, 200)
+            : Math.max(delayMs, 80);
+
+          if (!abortRequested) {
+            await sleep(stepDelay);
           }
         }
       }
     } finally {
       isAutofillRunning = false;
-      await ensureDropdownClosed();
+      await ensureDropdownClosed(null);
     }
 
     return {

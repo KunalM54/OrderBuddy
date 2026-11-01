@@ -288,6 +288,45 @@
             </select>
           </div>
         </div>
+
+        <!-- Custom Searchable React Dropdowns (Meesho Supplier Style) -->
+        <div class="grid-2" style="margin-top: 14px;">
+          <div class="form-field meesho-dropdown-group">
+            <label for="water-resistance-trigger">Water Resistance Level * ⓘ</label>
+            <div id="water-resistance-trigger" class="meesho-react-dropdown" role="combobox" aria-expanded="false" tabindex="0">
+              <span class="dropdown-selected-val">Select</span>
+              <span class="dropdown-chevron">▼</span>
+            </div>
+            <div class="meesho-dropdown-popover" style="display: none;">
+              <div class="search-box-wrap">
+                <input type="text" class="search-box-input" placeholder="Search">
+              </div>
+              <div class="dropdown-options-list">
+                <div class="option-row" data-val="Non Waterproof">Non Waterproof</div>
+                <div class="option-row" data-val="Not Water Resistant">Not Water Resistant</div>
+                <div class="option-row" data-val="Water Resistant">Water Resistant</div>
+                <div class="option-row" data-val="Waterproof">Waterproof</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-field meesho-dropdown-group">
+            <label for="weight-unit-trigger">Weight Unit * ⓘ</label>
+            <div id="weight-unit-trigger" class="meesho-react-dropdown" role="combobox" aria-expanded="false" tabindex="0">
+              <span class="dropdown-selected-val">Select</span>
+              <span class="dropdown-chevron">▼</span>
+            </div>
+            <div class="meesho-dropdown-popover" style="display: none;">
+              <div class="search-box-wrap">
+                <input type="text" class="search-box-input" placeholder="Search">
+              </div>
+              <div class="dropdown-options-list">
+                <div class="option-row" data-val="g">g</div>
+                <div class="option-row" data-val="kg">kg</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
       <!-- Section 4: Compliance & Logistics -->
@@ -407,10 +446,87 @@
 
     document.getElementById("btn-mock-clear").addEventListener("click", () => {
       form.reset();
+      document.querySelectorAll(".dropdown-selected-val").forEach(el => el.textContent = "Select");
     });
 
     document.getElementById("btn-mock-submit").addEventListener("click", () => {
       alert("Catalog submission triggered manually by seller! Validation OK.");
+    });
+
+    // Wire up custom searchable dropdowns simulation
+    document.querySelectorAll(".meesho-dropdown-group").forEach(group => {
+      const trigger = group.querySelector(".meesho-react-dropdown");
+      const popover = group.querySelector(".meesho-dropdown-popover");
+      const searchInput = group.querySelector(".search-box-input");
+      const valSpan = group.querySelector(".dropdown-selected-val");
+      const options = group.querySelectorAll(".option-row");
+
+      function openMenu() {
+        // Close others first
+        document.querySelectorAll(".meesho-dropdown-popover").forEach(p => {
+          if (p !== popover) {
+            p.style.display = "none";
+            p.closest(".meesho-dropdown-group")?.querySelector(".meesho-react-dropdown")?.setAttribute("aria-expanded", "false");
+          }
+        });
+        popover.style.display = "block";
+        trigger.setAttribute("aria-expanded", "true");
+        searchInput.value = "";
+        filterOptions("");
+        searchInput.focus();
+      }
+
+      function closeMenu() {
+        popover.style.display = "none";
+        trigger.setAttribute("aria-expanded", "false");
+      }
+
+      function filterOptions(query) {
+        const q = (query || "").toLowerCase().trim();
+        options.forEach(opt => {
+          const t = opt.textContent.toLowerCase();
+          opt.style.display = t.includes(q) ? "block" : "none";
+        });
+      }
+
+      trigger.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (popover.style.display === "block") {
+          closeMenu();
+        } else {
+          openMenu();
+        }
+      });
+
+      searchInput.addEventListener("input", (e) => {
+        filterOptions(e.target.value);
+      });
+
+      searchInput.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          closeMenu();
+        } else if (e.key === "Enter") {
+          const firstVisible = Array.from(options).find(o => o.style.display !== "none");
+          if (firstVisible) {
+            valSpan.textContent = firstVisible.textContent.trim();
+            closeMenu();
+          }
+        }
+      });
+
+      options.forEach(opt => {
+        opt.addEventListener("click", (e) => {
+          e.stopPropagation();
+          valSpan.textContent = opt.textContent.trim();
+          closeMenu();
+        });
+      });
+
+      document.addEventListener("click", (e) => {
+        if (!group.contains(e.target)) {
+          closeMenu();
+        }
+      });
     });
   </script>
 </body>
