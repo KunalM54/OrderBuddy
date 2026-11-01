@@ -181,7 +181,9 @@ window.MeeshoAutofillEngine = (() => {
         const optVal = window.MeeshoFieldMapper.normalizeText(opt.value).toLowerCase();
         const optText = window.MeeshoFieldMapper.normalizeText(opt.text).toLowerCase();
 
-        if (optVal === normalizedTarget || optText === normalizedTarget || optText.includes(normalizedTarget) || optVal.includes(normalizedTarget)) {
+        // Never select by substring. "g" must not select "kg" and "2390"
+        // must not select a larger value that merely contains it.
+        if (optVal === normalizedTarget || optText === normalizedTarget) {
           matchedIndex = i;
           break;
         }
@@ -200,6 +202,10 @@ window.MeeshoAutofillEngine = (() => {
         } else {
           element.value = stringValue;
         }
+        // Do not report success when the requested option does not exist.
+        // This prevents a later workflow step from treating an unselected
+        // native dropdown as correctly filled.
+        return false;
       }
     } else if (element.isContentEditable) {
       element.innerText = stringValue;
@@ -213,9 +219,10 @@ window.MeeshoAutofillEngine = (() => {
   }
 
   /**
-   * Multi-tiered option text matcher with zero arbitrary minimum length barriers.
-   * Accurately matches short values like "5%", "5", "1", "cm", "m", "S", "M", "L",
-   * as well as complex values like "630492 - Bed linen...", "Multicolor", "Pure Cotton".
+   * Multi-tiered option text matcher.
+   * Guarantees 100% exact match takes absolute priority.
+   * Short values (length <= 3 like "g", "kg", "m", "cm", "S", "M", "L", "XL", "1")
+   * STRICTLY require 100% exact match to prevent partial collisions (e.g. prevents "kg" matching "g").
    */
   function scoreOptionMatch(candidateText, targetValue) {
     if (!candidateText || !targetValue) return 0;
@@ -230,51 +237,58 @@ window.MeeshoAutofillEngine = (() => {
       return 0;
     }
 
-    // Tier 1: Exact string match
+    // Tier 1: 100% Exact string match
     if (normCandidate === normTarget) return 100;
 
-    // Tier 2: Candidate starts with target (e.g. "5% (Apparel...)" starts with "5%", "630492 - Bed linen" starts with "630492")
-    if (normCandidate.startsWith(normTarget)) return 95;
-
-    // Tier 3: Target starts with candidate (e.g. candidate "Pack of 5" vs target "Pack of 5 (Standard)")
-    if (normTarget.startsWith(normCandidate)) return 90;
-
-    // Tier 4: Alphanumeric exact match (ignoring spaces, dashes, slashes, percent signs)
+    // Tier 2: 100% Alphanumeric exact match (ignoring punctuation and spaces)
     const alphaCandidate = window.MeeshoFieldMapper.cleanAlphaNumeric(candidateText);
     const alphaTarget    = window.MeeshoFieldMapper.cleanAlphaNumeric(String(targetValue));
-    if (alphaCandidate && alphaTarget && alphaCandidate === alphaTarget) return 85;
+    if (alphaCandidate && alphaTarget && alphaCandidate === alphaTarget) return 100;
 
-    // Tier 5: Digits exact match or prefix (e.g. "630492" vs "630492 - Bed Linen", "250" vs "250 gms")
-    const targetDigits    = normTarget.replace(/\D/g, "");
-    const candidateDigits = normCandidate.replace(/\D/g, "");
-    if (targetDigits && candidateDigits) {
-      if (targetDigits === candidateDigits) return 82;
-      if (candidateDigits.startsWith(targetDigits)) return 80;
+    // Strict boundary rule for short values (e.g. "g" vs "kg", "m" vs "cm", "s" vs "xs"):
+    // Short values MUST be a 100% exact match. NEVER allow partial matching for short tokens!
+    if (normTarget.length <= 3 || normCandidate.length <= 3) {
+      return 0;
     }
 
-    // Tier 6: Whole word / token boundary match (e.g. target "5" in candidate "Pack of 5", target "Cotton" in "100% Pure Cotton")
-    const escapedTarget = normTarget.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const wordRegex = new RegExp("(^|[^a-z0-9])" + escapedTarget + "([^a-z0-9]|$)", "i");
-    if (wordRegex.test(normCandidate)) return 78;
+    // Tier 3: Candidate starts with target followed by punctuation or parenthesis
+    // (e.g. target "630492" vs candidate "630492 - Bed linen", target "5%" vs "5% (Apparel...)")
+    if (normCandidate.startsWith(normTarget)) {
+      const charAfter = normCandidate.slice(normTarget.length, normTarget.length + 1);
+      if (!charAfter || /[\s\-\(\[\{:,]/.test(charAfter)) {
+        return 92;
+      }
+    }
 
-    // Tier 7: Substring contains
-    if (normCandidate.includes(normTarget)) return 70;
-    if (normTarget.length >= 3 && normTarget.includes(normCandidate)) return 65;
+    // Tier 4: Target starts with candidate followed by punctuation
+    if (normTarget.startsWith(normCandidate)) {
+      const charAfter = normTarget.slice(normCandidate.length, normCandidate.length + 1);
+      if (!charAfter || /[\s\-\(\[\{:,]/.test(charAfter)) {
+        return 90;
+      }
+    }
 
-    // Tier 8: Multi-word token overlap
-    const targetWords = normTarget.split(/\s+/).filter(w => w.length >= 2);
-    const candidateWords = normCandidate.split(/\s+/).filter(w => w.length >= 2);
-    if (targetWords.length > 0 && candidateWords.length > 0) {
-      const matchCount = targetWords.filter(tw => candidateWords.some(cw => cw.includes(tw) || tw.includes(cw))).length;
-      if (matchCount === targetWords.length) return 60;
-      if (matchCount > 0) return 40 + (matchCount * 5);
+    // Tier 5: Digits exact match (e.g. "630492" in "630492 - Bed Linen")
+    const targetDigits    = normTarget.replace(/\D/g, "");
+    const candidateDigits = normCandidate.replace(/\D/g, "");
+    if (targetDigits && candidateDigits && targetDigits === candidateDigits && targetDigits.length >= 4) {
+      return 88;
+    }
+
+    // Tier 6: Whole word match for longer phrases (length >= 4)
+    if (normTarget.length >= 4) {
+      const escapedTarget = normTarget.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const wordRegex = new RegExp("(^|[^a-z0-9])" + escapedTarget + "([^a-z0-9]|$)", "i");
+      if (wordRegex.test(normCandidate)) {
+        return 85;
+      }
     }
 
     return 0;
   }
 
   function matchesOptionText(candidateText, targetValue) {
-    return scoreOptionMatch(candidateText, targetValue) >= 60;
+    return scoreOptionMatch(candidateText, targetValue) >= 85;
   }
 
   /**
@@ -405,99 +419,104 @@ window.MeeshoAutofillEngine = (() => {
   }
 
   /**
-   * Find the best-matching option element inside an active portal.
-   * Returns matching DOM element or null.
+   * Find the exact-matching option element inside an active portal.
+   * Uses DOM TreeWalker on text nodes to guarantee 100% immune detection,
+   * regardless of container classes or component hierarchy.
    */
   function findBestOptionInPortal(portal, targetValue) {
     if (!portal || !targetValue) return null;
 
     const stringValue = String(targetValue).trim();
+    const normTarget = window.MeeshoFieldMapper.normalizeText(stringValue).toLowerCase().trim();
+    if (!normTarget) return null;
 
-    // 1. Check standard option elements first
-    let candidates = Array.from(portal.querySelectorAll(
-      ".ant-select-item-option, [role='option'], [role='menuitem'], [class*='item-option' i], [class*='option' i], li"
-    )).filter(el => {
-      if (isDangerousActionElement(el)) return false;
-      if (el.tagName === "INPUT") return false;
-      if (el.classList.contains("ant-select-item-option-disabled") || el.getAttribute("aria-disabled") === "true") return false;
-      return isElementVisible(el);
-    });
+    const searchInputs = Array.from(portal.querySelectorAll("input, textarea"));
 
-    // 2. Fallback: inspect any visible text-bearing elements (div, span, p, a, label)
-    if (candidates.length === 0) {
-      candidates = Array.from(portal.querySelectorAll("div, span, p, a, label")).filter(el => {
-        if (isDangerousActionElement(el)) return false;
-        if (el.tagName === "INPUT" || el.querySelector("input")) return false;
-        if (!isElementVisible(el)) return false;
-        const txt = el.textContent?.trim();
-        return txt && txt.length >= 1 && txt.length <= 120;
-      });
-    }
+    // 1. Text node exact matching via TreeWalker
+    const walker = document.createTreeWalker(portal, NodeFilter.SHOW_TEXT, null, false);
+    let textNode;
+    const exactMatches = [];
 
-    let bestEl = null;
-    let bestScore = 0;
+    while ((textNode = walker.nextNode())) {
+      const parent = textNode.parentElement;
+      if (!parent) continue;
+      if (searchInputs.some(inp => inp === parent || inp.contains(parent) || parent.contains(inp))) continue;
+      if (isDangerousActionElement(parent) || !isElementVisible(parent)) continue;
 
-    for (const el of candidates) {
-      const contentEl = el.querySelector(".ant-select-item-option-content, [class*='option-content' i], [class*='label' i]") || el;
-      const txt = (contentEl.innerText || contentEl.textContent || "").trim();
-      if (!txt || txt.length > 150) continue;
-
-      const score = scoreOptionMatch(txt, stringValue);
-      if (score > bestScore) {
-        bestScore = score;
-        bestEl = el;
-        if (score === 100) break;
+      const txt = window.MeeshoFieldMapper.normalizeText(textNode.nodeValue).toLowerCase().trim();
+      if (txt === normTarget) {
+        exactMatches.push(parent);
       }
     }
 
-    return bestScore >= 50 ? bestEl : null;
+    if (exactMatches.length > 0) {
+      // Pick the most specific leaf element with the fewest children
+      exactMatches.sort((a, b) => a.children.length - b.children.length);
+      return exactMatches[0];
+    }
+
+    // 2. Direct element textContent exact match fallback
+    const candidateElements = Array.from(portal.querySelectorAll("div, span, li, p, a, label, [role='option']")).filter(el => {
+      if (isDangerousActionElement(el) || !isElementVisible(el)) return false;
+      if (searchInputs.some(inp => inp === el || inp.contains(el))) return false;
+      const directText = window.MeeshoFieldMapper.normalizeText(el.innerText || el.textContent).toLowerCase().trim();
+      if (directText === normTarget) return true;
+      const alphaCandidate = window.MeeshoFieldMapper.cleanAlphaNumeric(el.innerText || el.textContent);
+      const alphaTarget = window.MeeshoFieldMapper.cleanAlphaNumeric(stringValue);
+      return alphaCandidate && alphaTarget && alphaCandidate === alphaTarget;
+    });
+
+    if (candidateElements.length > 0) {
+      candidateElements.sort((a, b) => a.children.length - b.children.length);
+      return candidateElements[0];
+    }
+
+    // 3. For longer strings (length >= 4), prefix match (e.g. "630492 - Bed Linen...")
+    if (normTarget.length >= 4) {
+      const prefixCandidates = [];
+      const walker2 = document.createTreeWalker(portal, NodeFilter.SHOW_TEXT, null, false);
+      let tNode;
+      while ((tNode = walker2.nextNode())) {
+        const parent = tNode.parentElement;
+        if (!parent || searchInputs.some(inp => inp === parent || inp.contains(parent))) continue;
+        if (isDangerousActionElement(parent) || !isElementVisible(parent)) continue;
+
+        const txt = window.MeeshoFieldMapper.normalizeText(tNode.nodeValue).toLowerCase().trim();
+        if (txt.startsWith(normTarget)) {
+          const charAfter = txt.slice(normTarget.length, normTarget.length + 1);
+          if (!charAfter || /[\s\-\(\[\{:,]/.test(charAfter)) {
+            prefixCandidates.push(parent);
+          }
+        }
+      }
+      if (prefixCandidates.length > 0) {
+        prefixCandidates.sort((a, b) => a.children.length - b.children.length);
+        return prefixCandidates[0];
+      }
+    }
+
+    return null;
   }
 
   /**
    * Guarantee that ANY open dropdown on the page is fully and cleanly CLOSED.
    * Strictly adheres to safety constraints:
    * - NEVER clicks Discard/Cancel/Submit buttons.
-   * - Scopes Escape to the active search input/trigger (NEVER triggers global Discard modal).
-   * - Hides any lingering unclosed dropdown popups so the user's screen is 100% clean.
+   * - Does NOT send Escape if an option was clicked (prevents reverting selection).
    */
-  async function ensureDropdownClosed(triggerEl, maxWaitMs = 600) {
+  async function ensureDropdownClosed(triggerEl, maxWaitMs = 500) {
     if (!isAnyDropdownOpen()) return;
 
     const deadline = Date.now() + maxWaitMs;
 
-    // Step 1: Dispatch Escape directly to any open search inputs inside popups
-    const openSearchInputs = Array.from(document.querySelectorAll(
-      "input[placeholder*='Search' i], input[placeholder*='search' i]"
-    )).filter(el => !el.closest("#meesho-autolisting-host") && isElementVisible(el));
-
-    for (const si of openSearchInputs) {
-      si.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", code: "Escape", keyCode: 27, which: 27, bubbles: true, cancelable: true }));
-      si.dispatchEvent(new KeyboardEvent("keyup",   { key: "Escape", code: "Escape", keyCode: 27, which: 27, bubbles: true, cancelable: true }));
-      si.blur?.();
-    }
-
-    await sleep(50);
-    if (!isAnyDropdownOpen()) return;
-
-    // Step 2: Toggle trigger if it still has open class or aria-expanded
-    if (triggerEl) {
-      if (triggerEl.classList.contains("ant-select-open") || triggerEl.getAttribute("aria-expanded") === "true") {
-        const toggleTarget = triggerEl.querySelector(".ant-select-selector") || triggerEl;
-        dispatchFullClick(toggleTarget);
-        await sleep(50);
-      }
-    }
-
-    if (!isAnyDropdownOpen()) return;
-
-    // Step 3: Dispatch outside click on document.body (safe neutral coordinates)
+    // Step 1: Click outside on document.body or toggle trigger to close naturally
     const evtInit = {
       bubbles: true,
       cancelable: true,
       composed: true,
       view: window,
-      clientX: 15,
-      clientY: 15,
+      clientX: 20,
+      clientY: 20,
       button: 0,
       buttons: 0
     };
@@ -509,12 +528,24 @@ window.MeeshoAutofillEngine = (() => {
       document.activeElement.blur?.();
     }
 
-    // Step 4: Wait until closed
+    await sleep(60);
+    if (!isAnyDropdownOpen()) return;
+
+    // Step 2: Toggle trigger if it still has open class or aria-expanded
+    if (triggerEl) {
+      if (triggerEl.classList.contains("ant-select-open") || triggerEl.getAttribute("aria-expanded") === "true") {
+        const toggleTarget = triggerEl.querySelector(".ant-select-selector") || triggerEl;
+        dispatchFullClick(toggleTarget);
+        await sleep(50);
+      }
+    }
+
+    // Step 3: Wait until closed
     while (Date.now() < deadline && isAnyDropdownOpen()) {
       await sleep(30);
     }
 
-    // Step 5: If any stubborn popup is still displayed, gracefully hide it so screen is clean!
+    // Step 4: If any stubborn popup is still displayed, gracefully hide it
     if (isAnyDropdownOpen()) {
       const lingering = Array.from(document.querySelectorAll(
         "input[placeholder*='Search' i], input[placeholder*='search' i]"
@@ -531,6 +562,7 @@ window.MeeshoAutofillEngine = (() => {
   /**
    * Execute selection of an option element in a React / Ant Design dropdown.
    * Dispatches realistic pointer/mouse event sequences, calls .click(), and triggers React fiber synthetic handlers.
+   * Dispatches ONLY to the target option element (never to outer parent option lists).
    */
   function executeOptionClick(optionEl) {
     if (!optionEl || isDangerousActionElement(optionEl)) return false;
@@ -542,9 +574,12 @@ window.MeeshoAutofillEngine = (() => {
       chk.dispatchEvent(new Event("change", { bubbles: true }));
     }
 
+    // Scroll option into view with center alignment
+    optionEl.scrollIntoView({ behavior: "instant", block: "center" });
+
     const rect = optionEl.getBoundingClientRect();
-    const cx = rect.left + Math.max(2, rect.width / 2);
-    const cy = rect.top + Math.max(2, rect.height / 2);
+    const cx = Math.floor(rect.left + Math.max(2, rect.width / 2));
+    const cy = Math.floor(rect.top + Math.max(2, rect.height / 2));
     const evtInit = {
       bubbles: true,
       cancelable: true,
@@ -556,7 +591,7 @@ window.MeeshoAutofillEngine = (() => {
       buttons: 0
     };
 
-    // 1. Dispatch full pointer and mouse chain
+    // 1. Dispatch pointer, mouse, and click chain strictly to optionEl
     try {
       optionEl.dispatchEvent(new PointerEvent("pointerdown", { ...evtInit, buttons: 1 }));
       optionEl.dispatchEvent(new MouseEvent("mousedown",     { ...evtInit, buttons: 1 }));
@@ -566,36 +601,29 @@ window.MeeshoAutofillEngine = (() => {
       optionEl.click?.();
     } catch (e) {}
 
-    // 2. Dispatch on inner content element if present
-    const contentEl = optionEl.querySelector(".ant-select-item-option-content, [class*='option-content' i], [class*='label' i]");
-    if (contentEl && contentEl !== optionEl) {
-      try {
-        contentEl.dispatchEvent(new MouseEvent("mousedown", { ...evtInit, buttons: 1 }));
-        contentEl.dispatchEvent(new MouseEvent("mouseup",   { ...evtInit, buttons: 0 }));
-        contentEl.dispatchEvent(new MouseEvent("click",     { ...evtInit, buttons: 0 }));
-      } catch (e) {}
-    }
-
-    // 3. React Fiber synthetic event trigger (onMouseDown, onClick, onSelect)
-    const reactKey = Object.keys(optionEl).find(k => k.startsWith("__reactProps") || k.startsWith("__reactEvents"));
-    if (reactKey && optionEl[reactKey]) {
-      const props = optionEl[reactKey];
-      const syntheticEvt = {
-        bubbles: true,
-        cancelable: true,
-        preventDefault: () => {},
-        stopPropagation: () => {},
-        target: optionEl,
-        currentTarget: optionEl
-      };
-      if (typeof props.onMouseDown === "function") {
-        try { props.onMouseDown(syntheticEvt); } catch (e) {}
-      }
-      if (typeof props.onClick === "function") {
-        try { props.onClick(syntheticEvt); } catch (e) {}
-      }
-      if (typeof props.onSelect === "function") {
-        try { props.onSelect(syntheticEvt); } catch (e) {}
+    // 2. React Fiber synthetic event trigger on optionEl and its immediate parent only
+    const targetsToTrigger = [optionEl, optionEl.parentElement].filter(Boolean);
+    for (const target of targetsToTrigger) {
+      const reactKey = Object.keys(target).find(k => k.startsWith("__reactProps") || k.startsWith("__reactEvents"));
+      if (reactKey && target[reactKey]) {
+        const props = target[reactKey];
+        const syntheticEvt = {
+          bubbles: true,
+          cancelable: true,
+          preventDefault: () => {},
+          stopPropagation: () => {},
+          target: optionEl,
+          currentTarget: target
+        };
+        if (typeof props.onMouseDown === "function") {
+          try { props.onMouseDown(syntheticEvt); } catch (e) {}
+        }
+        if (typeof props.onClick === "function") {
+          try { props.onClick(syntheticEvt); } catch (e) {}
+        }
+        if (typeof props.onSelect === "function") {
+          try { props.onSelect(syntheticEvt); } catch (e) {}
+        }
       }
     }
 
@@ -667,15 +695,24 @@ window.MeeshoAutofillEngine = (() => {
     let optionSelected = false;
 
     if (portal) {
-      // 7. Search/filter if searchable input exists INSIDE THE PORTAL
+      // 1. FIRST: Check if the exact option is ALREADY visible in the portal right now!
+      let optionEl = findBestOptionInPortal(portal, stringValue);
+
+      // 2. If NOT immediately visible, use search input to filter the options
       const searchInput =
         portal.querySelector("input[placeholder*='Search' i]") ||
         portal.querySelector("input[type='text']") ||
         portal.querySelector("input:not([type='hidden'])");
 
-      let didSearch = false;
-      if (searchInput && !searchInput.readOnly && !isDangerousActionElement(searchInput)) {
+      if (!optionEl && searchInput && !searchInput.readOnly && !isDangerousActionElement(searchInput)) {
         searchInput.focus?.();
+
+        // React controlled input tracker bypass so Meesho updates its filter state:
+        const prevVal = searchInput.value || "";
+        if (searchInput._valueTracker) {
+          searchInput._valueTracker.setValue(prevVal + "_temp");
+        }
+
         if (nativeInputValueSetter) {
           nativeInputValueSetter.call(searchInput, stringValue);
         } else {
@@ -683,14 +720,12 @@ window.MeeshoAutofillEngine = (() => {
         }
         searchInput.dispatchEvent(new Event("input",  { bubbles: true }));
         searchInput.dispatchEvent(new Event("change", { bubbles: true }));
-        didSearch = true;
-        await sleep(140);
+        await sleep(180);
+
+        optionEl = findBestOptionInPortal(portal, stringValue);
       }
 
-      // 8. Find matching option in the portal
-      let optionEl = findBestOptionInPortal(portal, stringValue);
-
-      // Handle virtual scroll if not immediately visible
+      // 3. If still not visible, scroll virtual list holder to find it
       if (!optionEl) {
         const scrollHolder =
           portal.querySelector(".rc-virtual-list-holder") ||
@@ -699,66 +734,30 @@ window.MeeshoAutofillEngine = (() => {
           portal.querySelector("[class*='list' i]") ||
           portal;
 
-        for (let step = 0; step < 8; step++) {
-          scrollHolder.scrollTop += 90;
-          scrollHolder.dispatchEvent(new Event("scroll", { bubbles: true }));
-          await sleep(40);
-          optionEl = findBestOptionInPortal(portal, stringValue);
-          if (optionEl) break;
+        if (scrollHolder) {
+          scrollHolder.scrollTop = 0;
+          await sleep(30);
+          for (let step = 0; step < 10; step++) {
+            optionEl = findBestOptionInPortal(portal, stringValue);
+            if (optionEl) break;
+            scrollHolder.scrollTop += 80;
+            scrollHolder.dispatchEvent(new Event("scroll", { bubbles: true }));
+            await sleep(40);
+          }
         }
       }
 
-      // If search filter over-narrowed and found nothing: clear search and re-scan
-      if (!optionEl && didSearch && searchInput) {
-        if (nativeInputValueSetter) {
-          nativeInputValueSetter.call(searchInput, "");
-        } else {
-          searchInput.value = "";
-        }
-        searchInput.dispatchEvent(new Event("input",  { bubbles: true }));
-        searchInput.dispatchEvent(new Event("change", { bubbles: true }));
-        await sleep(100);
-
-        const scrollHolder = portal.querySelector(".rc-virtual-list-holder") || portal;
-        scrollHolder.scrollTop = 0;
-        await sleep(40);
-
-        for (let step = 0; step < 8; step++) {
-          optionEl = findBestOptionInPortal(portal, stringValue);
-          if (optionEl) break;
-          scrollHolder.scrollTop += 90;
-          scrollHolder.dispatchEvent(new Event("scroll", { bubbles: true }));
-          await sleep(40);
-        }
-      }
-
-      // 9. Click the option to select it
+      // 4. Click the exact option!
       if (optionEl) {
-        optionEl.scrollIntoView({ behavior: "instant", block: "nearest" });
-        await sleep(40);
         executeOptionClick(optionEl);
         optionSelected = true;
-
-        // If search input exists, dispatch Enter to confirm selection
-        if (searchInput) {
-          const enterEvt = { key: "Enter", code: "Enter", keyCode: 13, which: 13, bubbles: true };
-          searchInput.dispatchEvent(new KeyboardEvent("keydown", enterEvt));
-          searchInput.dispatchEvent(new KeyboardEvent("keyup",   enterEvt));
-        }
-
-        // Wait briefly for React state update
-        await sleep(120);
+        await sleep(150);
       }
     }
 
-    // 10. Fallback: If dropdown option was not found or failed, but element/trigger contains an input:
-    if (!optionSelected) {
-      const inputEl = element.tagName === "INPUT" ? element : trigger.querySelector("input:not([type='hidden'])");
-      if (inputEl && !inputEl.readOnly && !isDangerousActionElement(inputEl)) {
-        setNativeValue(inputEl, stringValue);
-        optionSelected = true;
-      }
-    }
+    // Do not fall back to assigning the search box value. That only changes
+    // the query text and can leave the dropdown unselected (or select a
+    // nearby result). Ordinary inputs are handled by setNativeValue directly.
 
     // 11. Safe & Complete Close: GUARANTEE dropdown is 100% closed before proceeding!
     await ensureDropdownClosed(trigger);
