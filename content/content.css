@@ -16,6 +16,11 @@
   }
 }
 
+.meesho-dropdown-filling {
+  outline: 2px solid #10b981 !important;
+  outline-offset: -2px !important;
+}
+
 .meesho-autofill-highlight {
   animation: meeshoPulseGlow 2.2s ease-in-out !important;
   transition: all 0.3s ease;

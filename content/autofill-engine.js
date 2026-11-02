@@ -822,7 +822,19 @@ window.MeeshoAutofillEngine = (() => {
    *   5. GUARANTEES dropdown is 100% closed before returning!
    *   6. Fallback supports direct value assignment so field is never left empty.
    */
-  async function fillDropdownField(element, targetValue, fieldKey = "") {
+  async function fillDropdownField(element, targetValue, fieldKey = "", highlight = false) {
+    if (!highlight || !element) return selectDropdownValue(element, targetValue, fieldKey);
+    const control = element.closest(".ant-select") ||
+      (element.tagName === "INPUT" && element.parentElement?.closest("[role='combobox'], [class*='dropdown' i], [class*='select' i]")) || element;
+    control.classList.add("meesho-dropdown-filling");
+    try {
+      return await selectDropdownValue(element, targetValue, fieldKey);
+    } finally {
+      control.classList.remove("meesho-dropdown-filling");
+    }
+  }
+
+  async function selectDropdownValue(element, targetValue, fieldKey) {
     if (!element || targetValue === undefined || targetValue === null || abortRequested) return false;
     if (isDangerousActionElement(element)) return false;
 
@@ -1252,7 +1264,7 @@ window.MeeshoAutofillEngine = (() => {
     const filledFields = [];
     const attempted = new Set();
     function followField(el) {
-      el.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "instant" });
+      el.scrollIntoView({ block: "center", inline: "nearest", behavior: "instant" });
     }
 
     try {
@@ -1288,7 +1300,7 @@ window.MeeshoAutofillEngine = (() => {
           let ok = false;
 
           if (fd.isCustomDropdown || fd.isDropdown || el.tagName === "SELECT") {
-            ok = await fillDropdownField(el, targetValue, fd.key);
+            ok = await fillDropdownField(el, targetValue, fd.key, highlight);
           } else {
             ok = setNativeValue(el, targetValue);
           }
@@ -1359,7 +1371,7 @@ window.MeeshoAutofillEngine = (() => {
             onProgress?.(j + 1, dynamicDescriptors.length, dfd.label);
             let ok = false;
             if (dfd.isCustomDropdown || dfd.isDropdown || del.tagName === "SELECT") {
-              ok = await fillDropdownField(del, targetValue, dfd.key);
+              ok = await fillDropdownField(del, targetValue, dfd.key, highlight);
             } else {
               ok = setNativeValue(del, targetValue);
             }
