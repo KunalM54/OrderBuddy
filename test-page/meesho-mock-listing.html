@@ -81,36 +81,87 @@
             <input type="text" id="product-name-input" name="product_name" placeholder="Enter Product Name" class="form-control" value="New Born Baby Godadi | Pack of 5">
           </div>
 
-          <div class="form-field">
-            <label for="size-select-1">Size *</label>
-            <select id="size-select-1" name="size" class="form-control">
-              <option value="">Select</option>
-              <option value="Free Size">Free Size</option>
-              <option value="0-3 Months">0-3 Months</option>
-              <option value="3-6 Months">3-6 Months</option>
-              <option value="Pack of 5">Pack of 5</option>
-            </select>
+          <div class="form-field meesho-dropdown-group" style="position: relative;">
+            <label>Size *</label>
+            <div class="meesho-react-dropdown" id="size-custom-dropdown" tabindex="0" role="combobox" aria-expanded="false">
+              <span class="dropdown-selected-val" id="size-dropdown-val">Select</span>
+              <span class="dropdown-chevron">▼</span>
+            </div>
+            <div class="meesho-dropdown-popover" id="size-dropdown-popover" style="display: none; width: 280px;">
+              <div class="search-box-wrap">
+                <input type="text" class="search-box-input" placeholder="Search" />
+              </div>
+              <div class="dropdown-options-list" style="max-height: 200px;">
+                <div class="option-row" style="padding: 6px 12px;">
+                  <label class="size-checkbox-label" style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                    <input type="checkbox" id="chk-free-size" value="Free Size" />
+                    <span>Free Size</span>
+                  </label>
+                </div>
+                <div class="option-row" style="padding: 6px 12px;">
+                  <label class="size-checkbox-label" style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                    <input type="checkbox" id="chk-size-s" value="S" />
+                    <span>S</span>
+                  </label>
+                </div>
+                <div class="option-row" style="padding: 6px 12px;">
+                  <label class="size-checkbox-label" style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                    <input type="checkbox" id="chk-size-m" value="M" />
+                    <span>M</span>
+                  </label>
+                </div>
+                <div class="option-row" style="padding: 6px 12px;">
+                  <label class="size-checkbox-label" style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                    <input type="checkbox" id="chk-size-l" value="L" />
+                    <span>L</span>
+                  </label>
+                </div>
+                <div class="option-row" style="padding: 6px 12px;">
+                  <label class="size-checkbox-label" style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                    <input type="checkbox" id="chk-size-xl" value="XL" />
+                    <span>XL</span>
+                  </label>
+                </div>
+              </div>
+              <div class="size-popover-footer" style="padding: 8px 12px; display:flex; justify-content:space-between; align-items:center; border-top:1px solid #f1f3f5;">
+                <span class="clear-filter-link" id="size-clear-filter">Clear Filter</span>
+                <button type="button" class="btn-apply-size" id="size-btn-apply">Apply</button>
+              </div>
+            </div>
           </div>
         </div>
-      </section>
 
-      <!-- Section 2: Pricing Details -->
-      <section class="form-section">
-        <h2 class="section-title">Pricing Details</h2>
-        <div class="grid-3">
-          <div class="form-field">
-            <label for="meesho-price-input">Meesho Price (₹) *</label>
-            <input type="number" id="meesho-price-input" name="meesho_price" placeholder="Enter customer price" class="form-control" value="280">
+        <!-- Dynamic Pricing & Inventory Table (Rendered only after Size is selected and Apply is clicked) -->
+        <div id="pricing-inventory-wrapper" style="margin-top: 20px; display: none;">
+          <div style="margin-bottom: 12px;">
+            <label style="display: flex; align-items: center; gap: 8px; font-weight: 600; cursor: pointer;">
+              <input type="checkbox" id="chk-copy-price" checked />
+              <span>Copy price details to all sizes</span>
+            </label>
           </div>
-
-          <div class="form-field">
-            <label for="wrong-return-price-input">Wrong/Defective Return Price (₹) *</label>
-            <input type="number" id="wrong-return-price-input" name="wrong_return_price" placeholder="Discounted price" class="form-control" value="279">
-          </div>
-
-          <div class="form-field">
-            <label for="mrp-input">Maximum Retail Price (MRP ₹) *</label>
-            <input type="number" id="mrp-input" name="mrp" placeholder="Maximum retail price" class="form-control" value="999">
+          <div class="meesho-table-wrapper">
+            <table class="meesho-pricing-table">
+              <thead>
+                <tr>
+                  <th>Size</th>
+                  <th>Meesho Price* ⓘ</th>
+                  <th>Wrong/Defective Returns Price ⓘ</th>
+                  <th>MRP* ⓘ</th>
+                  <th>Inventory* ⓘ</th>
+                  <th>SKU ID*</th>
+                </tr>
+              </thead>
+              <tbody id="pricing-table-body">
+                <tr>
+                  <td id="table-cell-size" style="font-weight: 600;">Free Size</td>
+                  <td><input type="number" class="form-control" name="meesho_price" placeholder="Enter customer price" /></td>
+                  <td><input type="number" class="form-control" name="wrong_return_price" placeholder="Discounted price" /></td>
+                  <td><input type="number" class="form-control" name="mrp" placeholder="Maximum retail price" /></td>
+                  <td><input type="number" class="form-control" name="inventory" placeholder="Inventory" /></td>
+                  <td><input type="text" class="form-control" name="sku_id" placeholder="SKU ID" /></td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </section>
@@ -453,6 +504,40 @@
       alert("Catalog submission triggered manually by seller! Validation OK.");
     });
 
+    // Size Multi-select Dropdown & Dynamic Table Wiring
+    const sizeGroup = document.querySelector("#size-custom-dropdown")?.closest(".meesho-dropdown-group");
+    if (sizeGroup) {
+      const applyBtn = sizeGroup.querySelector("#size-btn-apply");
+      const clearBtn = sizeGroup.querySelector("#size-clear-filter");
+      const tableWrapper = document.getElementById("pricing-inventory-wrapper");
+      const tableCellSize = document.getElementById("table-cell-size");
+      const valSpan = document.getElementById("size-dropdown-val");
+      const popover = document.getElementById("size-dropdown-popover");
+      const trigger = document.getElementById("size-custom-dropdown");
+
+      applyBtn?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const checked = Array.from(sizeGroup.querySelectorAll(".dropdown-options-list input[type='checkbox']:checked")).map(c => c.value);
+        if (checked.length > 0) {
+          valSpan.textContent = checked.join(", ");
+          tableCellSize.textContent = checked[0];
+          tableWrapper.style.display = "block";
+        } else {
+          valSpan.textContent = "Select";
+          tableWrapper.style.display = "none";
+        }
+        popover.style.display = "none";
+        trigger.setAttribute("aria-expanded", "false");
+      });
+
+      clearBtn?.addEventListener("click", (e) => {
+        e.stopPropagation();
+        sizeGroup.querySelectorAll(".dropdown-options-list input[type='checkbox']").forEach(c => c.checked = false);
+        valSpan.textContent = "Select";
+        tableWrapper.style.display = "none";
+      });
+    }
+
     // Wire up custom searchable dropdowns simulation
     document.querySelectorAll(".meesho-dropdown-group").forEach(group => {
       const trigger = group.querySelector(".meesho-react-dropdown");
@@ -516,6 +601,10 @@
 
       options.forEach(opt => {
         opt.addEventListener("click", (e) => {
+          if (group.querySelector("input[type='checkbox']")) {
+            // Checkbox multi-select dropdown: do not auto-close on row click
+            return;
+          }
           e.stopPropagation();
           valSpan.textContent = opt.textContent.trim();
           closeMenu();

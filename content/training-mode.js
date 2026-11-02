@@ -173,7 +173,9 @@ window.MeeshoTrainingMode = (() => {
     overlayBox.style.width = `${rect.width}px`;
     overlayBox.style.height = `${rect.height}px`;
 
-    const identified = window.MeeshoFieldMapper.identifyField(target, activeProfile?.customMappings || {});
+    const identified = typeof window.MeeshoFieldMapper?.identifyField === "function"
+      ? window.MeeshoFieldMapper.identifyField(target, activeProfile?.customMappings || {})
+      : null;
     const tag = overlayBox.querySelector(".meesho-overlay-tag");
     if (tag) {
       tag.textContent = identified ? `🎯 ${identified.label} (Click to edit)` : "🎯 Click to map field";
@@ -212,15 +214,19 @@ window.MeeshoTrainingMode = (() => {
     if (activeModal) activeModal.remove();
 
     const selector = generateSelector(element);
-    const detectedLabel = window.MeeshoFieldMapper.extractLabel(element) || element.name || element.id || "Unlabeled Field";
+    const detectedLabel = window.MeeshoFieldMapper?.extractLabel
+      ? (window.MeeshoFieldMapper.extractLabel(element) || element.name || element.id || "Unlabeled Field")
+      : (element.name || element.id || "Unlabeled Field");
     const currentValue = element.value || (element.isContentEditable ? element.innerText : "");
-    const identified = window.MeeshoFieldMapper.identifyField(element, activeProfile?.customMappings || {});
+    const identified = typeof window.MeeshoFieldMapper?.identifyField === "function"
+      ? window.MeeshoFieldMapper.identifyField(element, activeProfile?.customMappings || {})
+      : null;
 
     activeModal = document.createElement("div");
     activeModal.id = "meesho-training-modal";
     activeModal.className = "meesho-autolisting-ignore";
 
-    const standardFields = window.MeeshoFieldMapper.FIELD_DEFINITIONS;
+    const standardFields = window.MeeshoFieldMapper?.FIELD_DEFINITIONS || [];
     const optionsHtml = standardFields.map(f => {
       const isSelected = identified && identified.key === f.key ? "selected" : "";
       return `<option value="${f.key}" ${isSelected}>${f.category}: ${f.label}</option>`;

@@ -329,3 +329,88 @@ body {
   font-weight: 600;
 }
 
+/* Multi-Select & Size Popover Styles */
+.size-popover-body {
+  padding: 12px;
+}
+.size-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  user-select: none;
+}
+.size-popover-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid #f1f3f5;
+}
+.clear-filter-link {
+  color: #5c3bfe;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+}
+.btn-apply-size {
+  background: #5c3bfe;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-apply-size:hover {
+  background: #4726eb;
+}
+
+/* Pricing & Inventory Table Simulation */
+.meesho-table-wrapper {
+  margin-top: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow-x: auto;
+  background: #ffffff;
+}
+.meesho-pricing-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+.meesho-pricing-table th {
+  background: #f9fafb;
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #4b5563;
+  border-bottom: 1px solid #e5e7eb;
+  white-space: nowrap;
+}
+.meesho-pricing-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f3f4f6;
+  vertical-align: middle;
+}
+.meesho-pricing-table input {
+  height: 34px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 13px;
+  width: 100%;
+  max-width: 140px;
+}
+.meesho-pricing-table input:focus {
+  border-color: #5c3bfe;
+  outline: none;
+}
+
+

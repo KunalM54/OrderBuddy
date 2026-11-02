@@ -329,6 +329,63 @@ window.MeeshoAutofillEngine = (() => {
   }
 
   /**
+   * Helper to find the actual floating popup/dropdown container from a search input.
+   * Prevents erroneously selecting narrow input wrappers (e.g. div.search-box-wrap).
+   */
+  function findDropdownPopupFromSearchInput(searchInput) {
+    if (!searchInput) return null;
+
+    let curr = searchInput.parentElement;
+    let fallbackFloating = null;
+
+    while (curr && curr !== document.body) {
+      if (curr.closest("#meesho-autolisting-host") || isDangerousActionElement(curr)) break;
+
+      const role = (curr.getAttribute("role") || "").toLowerCase();
+      const cls = String(curr.className || "").toLowerCase();
+      const style = window.getComputedStyle(curr);
+
+      // Skip wrapper that ONLY wraps the search input
+      const isJustSearchWrapper = cls.includes("search") && !cls.includes("dropdown") && !cls.includes("popover") && !cls.includes("select") && !cls.includes("menu");
+
+      if (!isJustSearchWrapper) {
+        // High confidence popup containers
+        if (
+          role === "listbox" ||
+          role === "dialog" ||
+          role === "menu" ||
+          cls.includes("ant-select-dropdown") ||
+          cls.includes("dropdown") ||
+          cls.includes("popover") ||
+          cls.includes("popper") ||
+          cls.includes("popup")
+        ) {
+          return curr;
+        }
+
+        // Absolutely or fixed positioned floating elements
+        if ((style.position === "absolute" || style.position === "fixed") && isElementVisible(curr)) {
+          fallbackFloating = curr;
+        }
+      }
+      curr = curr.parentElement;
+    }
+
+    if (fallbackFloating) return fallbackFloating;
+
+    // Check if searchInput ancestor has option elements or siblings
+    let ancestor = searchInput.parentElement;
+    for (let i = 0; i < 4 && ancestor && ancestor !== document.body; i++) {
+      if (ancestor.querySelector("[role='option'], li, [class*='option' i], [class*='item' i]")) {
+        return ancestor;
+      }
+      ancestor = ancestor.parentElement;
+    }
+
+    return searchInput.parentElement?.parentElement || searchInput.parentElement;
+  }
+
+  /**
    * Find the active dropdown portal corresponding to the given trigger element
    */
   function findActiveDropdownPortal(triggerEl) {
@@ -348,9 +405,7 @@ window.MeeshoAutofillEngine = (() => {
         });
       }
       const activeSearchInput = searchInputs[0];
-      const portal = activeSearchInput.closest(
-        "[role='listbox'], [role='menu'], [class*='dropdown' i], [class*='popover' i], [class*='popper' i], [class*='menu' i], [class*='select' i], [class*='container' i], div[style*='position']"
-      ) || activeSearchInput.parentElement?.parentElement || activeSearchInput.parentElement;
+      const portal = findDropdownPopupFromSearchInput(activeSearchInput);
       if (portal && isElementVisible(portal)) {
         return portal;
       }
@@ -420,66 +475,90 @@ window.MeeshoAutofillEngine = (() => {
 
   /**
    * Find the exact-matching option element inside an active portal.
-   * Uses DOM TreeWalker on text nodes to guarantee 100% immune detection,
-   * regardless of container classes or component hierarchy.
+   * When a search input is present and has filtered options, guarantees matching the searched value
+   * and NEVER selecting the pre-search first value (such as "0").
    */
-  function findBestOptionInPortal(portal, targetValue) {
+  function findBestOptionInPortal(portal, targetValue, searchInput = null) {
     if (!portal || !targetValue) return null;
 
     const stringValue = String(targetValue).trim();
     const normTarget = window.MeeshoFieldMapper.normalizeText(stringValue).toLowerCase().trim();
+    const alphaTarget = window.MeeshoFieldMapper.cleanAlphaNumeric(stringValue);
     if (!normTarget) return null;
 
     const searchInputs = Array.from(portal.querySelectorAll("input, textarea"));
+    if (searchInput && !searchInputs.includes(searchInput)) {
+      searchInputs.push(searchInput);
+    }
 
-    // 1. Text node exact matching via TreeWalker
+    // Helper: is element a genuine option and visible
+    function isValidOptionElement(el) {
+      if (!el || el.nodeType !== Node.ELEMENT_NODE) return false;
+      if (isDangerousActionElement(el)) return false;
+      if (searchInputs.some(inp => inp === el || inp.contains(el))) return false;
+      return isElementVisible(el);
+    }
+
+    // 1. Check explicit option container elements first
+    const optionContainers = Array.from(portal.querySelectorAll(
+      "[role='option'], li, [class*='option' i], [class*='item' i], [class*='row' i], [class*='choice' i]"
+    )).filter(isValidOptionElement);
+
+    for (const opt of optionContainers) {
+      const optText = window.MeeshoFieldMapper.normalizeText(opt.innerText || opt.textContent).toLowerCase().trim();
+      const optAlpha = window.MeeshoFieldMapper.cleanAlphaNumeric(opt.innerText || opt.textContent);
+
+      if (optText === normTarget || (optAlpha && optAlpha === alphaTarget)) {
+        return opt;
+      }
+    }
+
+    // 2. Text node exact matching via TreeWalker
     const walker = document.createTreeWalker(portal, NodeFilter.SHOW_TEXT, null, false);
     let textNode;
     const exactMatches = [];
 
     while ((textNode = walker.nextNode())) {
       const parent = textNode.parentElement;
-      if (!parent) continue;
-      if (searchInputs.some(inp => inp === parent || inp.contains(parent) || parent.contains(inp))) continue;
-      if (isDangerousActionElement(parent) || !isElementVisible(parent)) continue;
+      if (!parent || !isValidOptionElement(parent)) continue;
 
       const txt = window.MeeshoFieldMapper.normalizeText(textNode.nodeValue).toLowerCase().trim();
-      if (txt === normTarget) {
+      const txtAlpha = window.MeeshoFieldMapper.cleanAlphaNumeric(textNode.nodeValue);
+
+      if (txt === normTarget || (txtAlpha && txtAlpha === alphaTarget)) {
         exactMatches.push(parent);
       }
     }
 
     if (exactMatches.length > 0) {
-      // Pick the most specific leaf element with the fewest children
-      exactMatches.sort((a, b) => a.children.length - b.children.length);
-      return exactMatches[0];
+      const match = exactMatches[0];
+      const optRow = match.closest("[role='option'], li, [class*='option' i], [class*='item' i], [class*='row' i], [class*='choice' i]") || match;
+      return optRow;
     }
 
-    // 2. Direct element textContent exact match fallback
+    // 3. Direct element textContent exact match fallback
     const candidateElements = Array.from(portal.querySelectorAll("div, span, li, p, a, label, [role='option']")).filter(el => {
-      if (isDangerousActionElement(el) || !isElementVisible(el)) return false;
-      if (searchInputs.some(inp => inp === el || inp.contains(el))) return false;
+      if (!isValidOptionElement(el)) return false;
       const directText = window.MeeshoFieldMapper.normalizeText(el.innerText || el.textContent).toLowerCase().trim();
       if (directText === normTarget) return true;
       const alphaCandidate = window.MeeshoFieldMapper.cleanAlphaNumeric(el.innerText || el.textContent);
-      const alphaTarget = window.MeeshoFieldMapper.cleanAlphaNumeric(stringValue);
       return alphaCandidate && alphaTarget && alphaCandidate === alphaTarget;
     });
 
     if (candidateElements.length > 0) {
-      candidateElements.sort((a, b) => a.children.length - b.children.length);
-      return candidateElements[0];
+      const match = candidateElements[0];
+      const optRow = match.closest("[role='option'], li, [class*='option' i], [class*='item' i], [class*='row' i], [class*='choice' i]") || match;
+      return optRow;
     }
 
-    // 3. For longer strings (length >= 4), prefix match (e.g. "630492 - Bed Linen...")
+    // 4. For longer strings (length >= 4), prefix match (e.g. "630492 - Bed Linen...")
     if (normTarget.length >= 4) {
       const prefixCandidates = [];
       const walker2 = document.createTreeWalker(portal, NodeFilter.SHOW_TEXT, null, false);
       let tNode;
       while ((tNode = walker2.nextNode())) {
         const parent = tNode.parentElement;
-        if (!parent || searchInputs.some(inp => inp === parent || inp.contains(parent))) continue;
-        if (isDangerousActionElement(parent) || !isElementVisible(parent)) continue;
+        if (!parent || !isValidOptionElement(parent)) continue;
 
         const txt = window.MeeshoFieldMapper.normalizeText(tNode.nodeValue).toLowerCase().trim();
         if (txt.startsWith(normTarget)) {
@@ -490,39 +569,105 @@ window.MeeshoAutofillEngine = (() => {
         }
       }
       if (prefixCandidates.length > 0) {
-        prefixCandidates.sort((a, b) => a.children.length - b.children.length);
-        return prefixCandidates[0];
+        const match = prefixCandidates[0];
+        const optRow = match.closest("[role='option'], li, [class*='option' i], [class*='item' i], [class*='row' i], [class*='choice' i]") || match;
+        return optRow;
+      }
+    }
+
+    // 5. Filtered Search Results Handling:
+    // If searchInput has been typed into and matches targetValue, check the visible option rows in the filtered dropdown
+    const activeSearch = searchInput || (searchInputs.length > 0 ? searchInputs[0] : null);
+    if (activeSearch) {
+      const searchVal = window.MeeshoFieldMapper.normalizeText(activeSearch.value || "").toLowerCase().trim();
+      if (searchVal === normTarget) {
+        const visibleRows = Array.from(portal.querySelectorAll(
+          "[role='option'], li, [class*='option' i], [class*='item' i], [class*='row' i]"
+        )).filter(isValidOptionElement);
+
+        for (const row of visibleRows) {
+          const rowText = window.MeeshoFieldMapper.normalizeText(row.innerText || row.textContent).toLowerCase().trim();
+          const rowAlpha = window.MeeshoFieldMapper.cleanAlphaNumeric(row.innerText || row.textContent);
+          // Never match "0" if target is not "0"
+          if (normTarget !== "0" && (rowText === "0" || rowAlpha === "0")) continue;
+
+          if (rowText === normTarget || rowAlpha === alphaTarget || rowText.startsWith(normTarget)) {
+            return row;
+          }
+        }
+
+        // Check any leaf text elements below searchInput
+        const allTextElements = Array.from(portal.querySelectorAll("div, span, li, p, label")).filter(isValidOptionElement);
+        for (const el of allTextElements) {
+          const t = window.MeeshoFieldMapper.normalizeText(el.innerText || el.textContent).toLowerCase().trim();
+          if (normTarget !== "0" && t === "0") continue;
+          if (t === normTarget) {
+            return el.closest("[role='option'], li, [class*='option' i], [class*='item' i], [class*='row' i]") || el;
+          }
+        }
       }
     }
 
     return null;
   }
 
+  // Read only the value rendered by the trigger, excluding the arrow/icon
+  // text where possible. This is used as the source of truth after a click.
+  function getDropdownDisplayedValue(trigger) {
+    if (!trigger) return "";
+    const valueEl = trigger.querySelector(
+      ".ant-select-selection-item, [class*='singleValue' i], [class*='selected' i], [class*='value' i], [class*='selection-item' i]"
+    );
+    return window.MeeshoFieldMapper.normalizeText(
+      valueEl?.innerText || valueEl?.textContent || trigger.innerText || trigger.textContent || ""
+    ).toLowerCase().trim();
+  }
+
+  function dropdownDisplaysTarget(trigger, targetValue) {
+    const displayed = getDropdownDisplayedValue(trigger);
+    const target = window.MeeshoFieldMapper.normalizeText(String(targetValue)).toLowerCase().trim();
+    if (!displayed || !target) return false;
+    if (displayed === target) return true;
+    // Meesho can render a unit/label around the selected value. Numeric values
+    // must still be exact so `0` can never satisfy `10`, `50`, etc.
+    if (/^\d+(?:\.\d+)?$/.test(target)) {
+      return displayed.split(/[^\d.]+/).filter(Boolean).some(part => part === target);
+    }
+    return displayed.includes(target);
+  }
+
   /**
    * Guarantee that ANY open dropdown on the page is fully and cleanly CLOSED.
    * Strictly adheres to safety constraints:
    * - NEVER clicks Discard/Cancel/Submit buttons.
-   * - Does NOT send Escape if an option was clicked (prevents reverting selection).
+   * - Safe neutral outside click away from headers and buttons.
+   * - Toggles trigger chevron/selector to close naturally.
    */
   async function ensureDropdownClosed(triggerEl, maxWaitMs = 500) {
     if (!isAnyDropdownOpen()) return;
 
     const deadline = Date.now() + maxWaitMs;
 
-    // Step 1: Click outside on document.body or toggle trigger to close naturally
-    const evtInit = {
-      bubbles: true,
-      cancelable: true,
-      composed: true,
-      view: window,
-      clientX: 20,
-      clientY: 20,
-      button: 0,
-      buttons: 0
-    };
-    document.body.dispatchEvent(new MouseEvent("mousedown", { ...evtInit, buttons: 1 }));
-    document.body.dispatchEvent(new MouseEvent("mouseup",   { ...evtInit, buttons: 0 }));
-    document.body.dispatchEvent(new MouseEvent("click",     { ...evtInit, buttons: 0 }));
+    // Step 1: Click outside in a neutral background container (away from nav / header)
+    const neutralTarget = document.querySelector("main, .container, form, body");
+    if (neutralTarget) {
+      const rect = neutralTarget.getBoundingClientRect();
+      const safeX = Math.max(50, Math.floor(rect.left + 50));
+      const safeY = Math.max(150, Math.floor(rect.top + 150));
+      const evtInit = {
+        bubbles: true,
+        cancelable: true,
+        composed: true,
+        view: window,
+        clientX: safeX,
+        clientY: safeY,
+        button: 0,
+        buttons: 0
+      };
+      neutralTarget.dispatchEvent(new MouseEvent("mousedown", { ...evtInit, buttons: 1 }));
+      neutralTarget.dispatchEvent(new MouseEvent("mouseup",   { ...evtInit, buttons: 0 }));
+      neutralTarget.dispatchEvent(new MouseEvent("click",     { ...evtInit, buttons: 0 }));
+    }
 
     if (document.activeElement && !document.activeElement.closest("#meesho-autolisting-host")) {
       document.activeElement.blur?.();
@@ -531,10 +676,16 @@ window.MeeshoAutofillEngine = (() => {
     await sleep(60);
     if (!isAnyDropdownOpen()) return;
 
-    // Step 2: Toggle trigger if it still has open class or aria-expanded
+    // Step 2: Toggle trigger if it still has open class or aria-expanded="true"
     if (triggerEl) {
-      if (triggerEl.classList.contains("ant-select-open") || triggerEl.getAttribute("aria-expanded") === "true") {
-        const toggleTarget = triggerEl.querySelector(".ant-select-selector") || triggerEl;
+      const isExpanded = triggerEl.getAttribute("aria-expanded") === "true" ||
+                         triggerEl.classList.contains("ant-select-open") ||
+                         triggerEl.querySelector("[aria-expanded='true']");
+      if (isExpanded) {
+        const toggleTarget = triggerEl.querySelector(".ant-select-selector") ||
+                             triggerEl.querySelector("[class*='selector' i]") ||
+                             triggerEl.querySelector("svg, [class*='arrow' i], [class*='chevron' i]") ||
+                             triggerEl;
         dispatchFullClick(toggleTarget);
         await sleep(50);
       }
@@ -549,7 +700,7 @@ window.MeeshoAutofillEngine = (() => {
     if (isAnyDropdownOpen()) {
       const lingering = Array.from(document.querySelectorAll(
         "input[placeholder*='Search' i], input[placeholder*='search' i]"
-      )).map(inp => inp.closest("[role='listbox'], [role='menu'], [class*='dropdown' i], [class*='popover' i], [class*='popper' i]") || inp.parentElement?.parentElement).filter(Boolean);
+      )).map(inp => findDropdownPopupFromSearchInput(inp) || inp.parentElement?.parentElement).filter(Boolean);
 
       for (const el of lingering) {
         if (!el.closest("#meesho-autolisting-host") && !isDangerousActionElement(el)) {
@@ -561,50 +712,71 @@ window.MeeshoAutofillEngine = (() => {
 
   /**
    * Execute selection of an option element in a React / Ant Design dropdown.
-   * Dispatches realistic pointer/mouse event sequences, calls .click(), and triggers React fiber synthetic handlers.
-   * Dispatches ONLY to the target option element (never to outer parent option lists).
+   * Dispatches realistic pointer/mouse event sequences to both the element and its row container,
+   * invokes React synthetic fiber handlers, and dispatches Enter on search input if present.
    */
-  function executeOptionClick(optionEl) {
+  function executeOptionClick(optionEl, searchInput = null) {
     if (!optionEl || isDangerousActionElement(optionEl)) return false;
 
-    // Check inner checkbox if multi-select
-    const chk = optionEl.querySelector("input[type='checkbox']");
+    // Check inner, sibling, or parent checkbox if multi-select or checkbox dropdown
+    const chk = optionEl.tagName === "INPUT" && optionEl.type === "checkbox"
+      ? optionEl
+      : (
+          optionEl.querySelector("input[type='checkbox']") ||
+          optionEl.parentElement?.querySelector("input[type='checkbox']") ||
+          optionEl.closest("label, li, [role='option'], [class*='option' i], [class*='item' i], [class*='row' i]")?.querySelector("input[type='checkbox']")
+        );
+
     if (chk && !chk.checked) {
-      chk.checked = true;
-      chk.dispatchEvent(new Event("change", { bubbles: true }));
+      dispatchFullClick(chk);
+      if (!chk.checked) {
+        chk.checked = true;
+        chk.dispatchEvent(new Event("change", { bubbles: true }));
+        chk.dispatchEvent(new Event("input",  { bubbles: true }));
+      }
     }
 
+    // Do not walk up to an arbitrary `div` here.  On Meesho's virtualized
+    // lists that div can be the list container; clicking it after the real
+    // option causes the first row (often `0`) to be committed instead.
+    const optionRow = optionEl.closest("[role='option'], li, [class*='option' i], [class*='item' i], [class*='row' i], [class*='choice' i]") || optionEl;
+
     // Scroll option into view with center alignment
-    optionEl.scrollIntoView({ behavior: "instant", block: "center" });
+    optionRow.scrollIntoView({ behavior: "instant", block: "center" });
 
-    const rect = optionEl.getBoundingClientRect();
-    const cx = Math.floor(rect.left + Math.max(2, rect.width / 2));
-    const cy = Math.floor(rect.top + Math.max(2, rect.height / 2));
-    const evtInit = {
-      bubbles: true,
-      cancelable: true,
-      composed: true,
-      view: window,
-      clientX: cx,
-      clientY: cy,
-      button: 0,
-      buttons: 0
-    };
+    // Click only the resolved option row.  Dispatching a second click to a
+    // child and its parent can select a different row in React/AntD menus.
+    const clickTargets = [optionRow];
 
-    // 1. Dispatch pointer, mouse, and click chain strictly to optionEl
-    try {
-      optionEl.dispatchEvent(new PointerEvent("pointerdown", { ...evtInit, buttons: 1 }));
-      optionEl.dispatchEvent(new MouseEvent("mousedown",     { ...evtInit, buttons: 1 }));
-      optionEl.dispatchEvent(new PointerEvent("pointerup",   { ...evtInit, buttons: 0 }));
-      optionEl.dispatchEvent(new MouseEvent("mouseup",       { ...evtInit, buttons: 0 }));
-      optionEl.dispatchEvent(new MouseEvent("click",         { ...evtInit, buttons: 0 }));
-      optionEl.click?.();
-    } catch (e) {}
+    for (const target of clickTargets) {
+      const rect = target.getBoundingClientRect();
+      const cx = Math.floor(rect.left + Math.max(2, rect.width / 2));
+      const cy = Math.floor(rect.top + Math.max(2, rect.height / 2));
+      const evtInit = {
+        bubbles: true,
+        cancelable: true,
+        composed: true,
+        view: window,
+        clientX: cx,
+        clientY: cy,
+        button: 0,
+        buttons: 0
+      };
 
-    // 2. React Fiber synthetic event trigger on optionEl and its immediate parent only
-    const targetsToTrigger = [optionEl, optionEl.parentElement].filter(Boolean);
-    for (const target of targetsToTrigger) {
-      const reactKey = Object.keys(target).find(k => k.startsWith("__reactProps") || k.startsWith("__reactEvents"));
+      try {
+        target.dispatchEvent(new PointerEvent("pointerdown", { ...evtInit, buttons: 1 }));
+        target.dispatchEvent(new MouseEvent("mousedown",     { ...evtInit, buttons: 1 }));
+        target.dispatchEvent(new PointerEvent("pointerup",   { ...evtInit, buttons: 0 }));
+        target.dispatchEvent(new MouseEvent("mouseup",       { ...evtInit, buttons: 0 }));
+        target.dispatchEvent(new MouseEvent("click",         { ...evtInit, buttons: 0 }));
+        target.click?.();
+      } catch (e) {}
+    }
+
+    // React Fiber synthetic event trigger on all levels from optionEl up to optionRow
+    const fiberTargets = [optionEl, optionEl.parentElement, optionRow, optionRow.parentElement].filter((v, idx, arr) => v && arr.indexOf(v) === idx);
+    for (const target of fiberTargets) {
+      const reactKey = Object.keys(target).find(k => k.startsWith("__reactProps") || k.startsWith("__reactEvents") || k.startsWith("__reactFiber"));
       if (reactKey && target[reactKey]) {
         const props = target[reactKey];
         const syntheticEvt = {
@@ -624,7 +796,20 @@ window.MeeshoAutofillEngine = (() => {
         if (typeof props.onSelect === "function") {
           try { props.onSelect(syntheticEvt); } catch (e) {}
         }
+        if (typeof props.onChange === "function") {
+          try { props.onChange(syntheticEvt); } catch (e) {}
+        }
       }
+    }
+
+    // If search input exists, also dispatch Enter to confirm selection
+    if (searchInput && isElementVisible(searchInput)) {
+      const enterEvt = { key: "Enter", code: "Enter", keyCode: 13, which: 13, bubbles: true, cancelable: true };
+      try {
+        searchInput.dispatchEvent(new KeyboardEvent("keydown", enterEvt));
+        searchInput.dispatchEvent(new KeyboardEvent("keypress", enterEvt));
+        searchInput.dispatchEvent(new KeyboardEvent("keyup", enterEvt));
+      } catch (e) {}
     }
 
     return true;
@@ -640,7 +825,7 @@ window.MeeshoAutofillEngine = (() => {
    *   5. GUARANTEES dropdown is 100% closed before returning!
    *   6. Fallback supports direct value assignment so field is never left empty.
    */
-  async function fillDropdownField(element, targetValue) {
+  async function fillDropdownField(element, targetValue, fieldKey = "") {
     if (!element || targetValue === undefined || targetValue === null || abortRequested) return false;
     if (isDangerousActionElement(element)) return false;
 
@@ -692,77 +877,139 @@ window.MeeshoAutofillEngine = (() => {
       return false;
     }
 
+    const dimension = /^(product_)?(breadth|width|length)$/.test(fieldKey);
     let optionSelected = false;
 
     if (portal) {
-      // 1. FIRST: Check if the exact option is ALREADY visible in the portal right now!
-      let optionEl = findBestOptionInPortal(portal, stringValue);
+      // Split targetValue if multiple sizes/values are comma-separated (e.g. "Free Size" or "S, M, L")
+      const targetItems = stringValue.includes(",")
+        ? stringValue.split(",").map(s => s.trim()).filter(Boolean)
+        : [stringValue];
 
-      // 2. If NOT immediately visible, use search input to filter the options
-      const searchInput =
-        portal.querySelector("input[placeholder*='Search' i]") ||
-        portal.querySelector("input[type='text']") ||
-        portal.querySelector("input:not([type='hidden'])");
+      for (const itemVal of targetItems) {
+        const searchInput =
+          portal.querySelector("input[placeholder*='Search' i]") ||
+          portal.querySelector("input[type='text']") ||
+          portal.querySelector("input:not([type='hidden'])");
 
-      if (!optionEl && searchInput && !searchInput.readOnly && !isDangerousActionElement(searchInput)) {
-        searchInput.focus?.();
+        // 1. FIRST: Check if the exact option is ALREADY visible in the portal right now!
+        const findOption = () => {
+          if (!dimension) return findBestOptionInPortal(portal, itemVal, searchInput);
+          const candidates = Array.from(portal.querySelectorAll("[role='option'], li, div, span, p, label"));
+          return candidates.reverse().find(el => isElementVisible(el) &&
+            !isDangerousActionElement(el) && !el.contains(searchInput) &&
+            (el.innerText || el.textContent).trim() === itemVal);
+        };
+        let optionEl = findOption();
 
-        // React controlled input tracker bypass so Meesho updates its filter state:
-        const prevVal = searchInput.value || "";
-        if (searchInput._valueTracker) {
-          searchInput._valueTracker.setValue(prevVal + "_temp");
-        }
+        // 2. If NOT immediately visible, use search input to filter the options
+        if (!optionEl && searchInput && !searchInput.readOnly && !isDangerousActionElement(searchInput)) {
+          searchInput.focus?.();
 
-        if (nativeInputValueSetter) {
-          nativeInputValueSetter.call(searchInput, stringValue);
-        } else {
-          searchInput.value = stringValue;
-        }
-        searchInput.dispatchEvent(new Event("input",  { bubbles: true }));
-        searchInput.dispatchEvent(new Event("change", { bubbles: true }));
-        await sleep(180);
+          // React controlled input tracker bypass so Meesho updates its filter state:
+          const prevVal = searchInput.value || "";
+          if (searchInput._valueTracker) {
+            searchInput._valueTracker.setValue(prevVal + "_temp");
+          }
 
-        optionEl = findBestOptionInPortal(portal, stringValue);
-      }
+          if (nativeInputValueSetter) {
+            nativeInputValueSetter.call(searchInput, itemVal);
+          } else {
+            searchInput.value = itemVal;
+          }
+          searchInput.dispatchEvent(new Event("input",  { bubbles: true }));
+          searchInput.dispatchEvent(new Event("change", { bubbles: true }));
 
-      // 3. If still not visible, scroll virtual list holder to find it
-      if (!optionEl) {
-        const scrollHolder =
-          portal.querySelector(".rc-virtual-list-holder") ||
-          portal.querySelector("[class*='virtual' i]") ||
-          portal.querySelector("[class*='holder' i]") ||
-          portal.querySelector("[class*='list' i]") ||
-          portal;
-
-        if (scrollHolder) {
-          scrollHolder.scrollTop = 0;
-          await sleep(30);
-          for (let step = 0; step < 10; step++) {
-            optionEl = findBestOptionInPortal(portal, stringValue);
+          // Polling wait for the filtered option to render in the DOM (accommodates search debounce)
+          for (let waitStep = 0; waitStep < 14; waitStep++) {
+            await sleep(50);
+            optionEl = findOption();
             if (optionEl) break;
-            scrollHolder.scrollTop += 80;
-            scrollHolder.dispatchEvent(new Event("scroll", { bubbles: true }));
-            await sleep(40);
+
+            const freshPortal = findActiveDropdownPortal(trigger);
+            if (freshPortal && freshPortal !== portal) {
+              portal = freshPortal;
+              optionEl = findOption();
+              if (optionEl) break;
+            }
+          }
+        }
+
+        // 3. If still not visible, scroll virtual list holder to find it
+        if (!optionEl) {
+          const scrollHolder =
+            portal.querySelector(".rc-virtual-list-holder") ||
+            portal.querySelector("[class*='virtual' i]") ||
+            portal.querySelector("[class*='holder' i]") ||
+            portal.querySelector("[class*='list' i]") ||
+            portal;
+
+          if (scrollHolder) {
+            scrollHolder.scrollTop = 0;
+            await sleep(30);
+            for (let step = 0; step < 10; step++) {
+              optionEl = findOption();
+              if (optionEl) break;
+              scrollHolder.scrollTop += 80;
+              scrollHolder.dispatchEvent(new Event("scroll", { bubbles: true }));
+              await sleep(40);
+            }
+          }
+        }
+
+        // 4. Click the exact option!
+        if (optionEl) {
+          if (dimension) {
+            // A single bubbling click commits the matched row. Enter would
+            // separately accept the keyboard highlight (usually zero).
+            optionEl.click();
+            optionSelected = true;
+            break;
+          }
+          executeOptionClick(optionEl, searchInput);
+          await sleep(180);
+
+          // Never report success until the trigger itself shows the requested
+          // value. This prevents a stale/first option (especially `0`) from
+          // being counted as filled.
+          optionSelected = dropdownDisplaysTarget(trigger, itemVal);
+
+          if (!optionSelected && searchInput && !isDangerousActionElement(searchInput)) {
+            // Re-query after React has re-rendered; the old node can be stale
+            // in a virtualized list. Re-select only an exact match.
+            const freshPortal = findActiveDropdownPortal(trigger) || portal;
+            const retryOption = findBestOptionInPortal(freshPortal, itemVal, searchInput);
+            if (retryOption) {
+              executeOptionClick(retryOption, searchInput);
+              await sleep(180);
+              optionSelected = dropdownDisplaysTarget(trigger, itemVal);
+            }
           }
         }
       }
 
-      // 4. Click the exact option!
-      if (optionEl) {
-        executeOptionClick(optionEl);
-        optionSelected = true;
-        await sleep(150);
+      // 5. Look for "Apply" button inside portal (Meesho multi-select / Size dropdowns)
+      const allButtons = Array.from(portal.querySelectorAll("button, [role='button'], div[class*='btn' i], span[class*='btn' i], a[class*='btn' i], input[type='button']"));
+      const applyBtn = allButtons.find(b => {
+        if (!isElementVisible(b) || isDangerousActionElement(b)) return false;
+        const txt = b.textContent.trim().toLowerCase();
+        return txt === "apply" || txt === "done" || txt === "ok" || txt.startsWith("apply");
+      });
+
+      if (applyBtn) {
+        executeOptionClick(applyBtn);
+        await sleep(400); // Wait for Meesho's React state to render the dependent table
       }
     }
 
-    // Do not fall back to assigning the search box value. That only changes
-    // the query text and can leave the dropdown unselected (or select a
-    // nearby result). Ordinary inputs are handled by setNativeValue directly.
-
-    // 11. Safe & Complete Close: GUARANTEE dropdown is 100% closed before proceeding!
+    // 6. Safe & Complete Close: GUARANTEE dropdown is 100% closed before proceeding!
     await ensureDropdownClosed(trigger);
     await sleep(50);
 
+    if (dimension) {
+      const display = trigger.tagName === "INPUT" ? trigger.value : getDropdownDisplayedValue(trigger);
+      return optionSelected && String(display).trim().replace(/[▼▲▾▴]/g, "").trim() === stringValue;
+    }
     return optionSelected;
   }
 
@@ -772,6 +1019,71 @@ window.MeeshoAutofillEngine = (() => {
     setTimeout(() => {
       el.classList.remove("meesho-autofill-highlight");
     }, 2400);
+  }
+
+  /**
+   * Helper to inspect the page for selected sizes in the dynamic table,
+   * checked checkboxes in popups, or tag chips.
+   */
+  function extractSelectedSizesFromPage() {
+    const foundSizes = [];
+
+    // 1. From Pricing & Inventory Table (first column under 'Size')
+    const tables = Array.from(document.querySelectorAll("table, [role='table'], [class*='table' i], [class*='grid' i]"));
+    for (const table of tables) {
+      if (table.closest("#meesho-autolisting-host")) continue;
+      const headerRow = table.querySelector("thead tr, tr:first-child, [role='row']:first-child, [class*='header' i]");
+      const headers = headerRow
+        ? Array.from(headerRow.children)
+        : Array.from(table.querySelectorAll("th, [role='columnheader']"));
+
+      const sizeColIndex = headers.findIndex(h => {
+        const txt = (h.textContent || "").trim().toLowerCase();
+        return txt === "size" || txt.startsWith("size");
+      });
+
+      if (sizeColIndex !== -1) {
+        const rows = Array.from(table.querySelectorAll("tbody tr, tr:not(:first-child), [role='row']:not(:first-child)"));
+        for (const row of rows) {
+          const cells = Array.from(row.querySelectorAll("td, [role='cell']"));
+          if (cells[sizeColIndex]) {
+            const txt = (cells[sizeColIndex].textContent || "").trim();
+            if (txt && !foundSizes.includes(txt) && txt.length < 50 && !txt.toLowerCase().includes("size")) {
+              foundSizes.push(txt);
+            }
+          }
+        }
+      }
+    }
+
+    if (foundSizes.length > 0) {
+      return foundSizes.join(", ");
+    }
+
+    // 2. From checked checkboxes in any open size popover or inline list
+    const checkedBoxes = Array.from(document.querySelectorAll("input[type='checkbox']:checked"))
+      .filter(c => !c.closest("#meesho-autolisting-host") && !isDangerousActionElement(c));
+
+    for (const cb of checkedBoxes) {
+      const parentRow = cb.closest("label, li, tr, [class*='option' i], [class*='item' i], div");
+      if (parentRow) {
+        const txt = parentRow.textContent.replace(/[\r\n\t]+/g, " ").trim();
+        const norm = txt.toLowerCase();
+        if (norm && !norm.includes("select all") && !norm.includes("copy price") && !norm.includes("manufacturer")) {
+          if (/free size|xs|s|m|l|xl|xxl|\d+\s*(cm|m|inch|ft|in)?/i.test(txt)) {
+            if (!foundSizes.includes(txt) && txt.length < 50) {
+              foundSizes.push(txt);
+            }
+          }
+        }
+      }
+    }
+
+    if (foundSizes.length > 0) {
+      return foundSizes.join(", ");
+    }
+
+    return "";
   }
 
   /**
@@ -820,6 +1132,16 @@ window.MeeshoAutofillEngine = (() => {
         val = el.innerText ? el.innerText.trim() : "";
       }
 
+      // Size field special handling: if trigger shows "Select" or empty, retrieve size from table or checked options
+      if (fd.key === "size" || fd.key === "sizes" || fd.label.toLowerCase().includes("size")) {
+        if (!val || val.toLowerCase().startsWith("select") || /^\d+\s*selected$/i.test(val)) {
+          const detectedSize = extractSelectedSizesFromPage();
+          if (detectedSize) {
+            val = detectedSize;
+          }
+        }
+      }
+
       capturedFields[fd.key] = {
         key: fd.key,
         label: fd.label,
@@ -847,6 +1169,77 @@ window.MeeshoAutofillEngine = (() => {
   }
 
   /**
+   * Helper to look up profile value for a given field descriptor using exact keys,
+   * labels, aliases, and custom mappings.
+   */
+  function resolveFieldValue(fd, profile) {
+    if (!profile || !profile.fields || !fd) return "";
+    const customMappings = profile.customMappings || {};
+
+    // 1. Direct key lookup
+    const entry = profile.fields[fd.key];
+    if (entry !== undefined) {
+      const val = typeof entry === "object" && entry !== null && "value" in entry ? entry.value : entry;
+      if (val !== undefined && val !== null && String(val).trim() !== "") return val;
+    }
+
+    const normFdLabel = window.MeeshoFieldMapper.cleanLabel(fd.label).toLowerCase();
+    const aliases = window.MeeshoFieldMapper.getAliases(fd.key);
+
+    // 2. Exact label or exact key match
+    for (const [k, v] of Object.entries(profile.fields)) {
+      const valCandidate = typeof v === "object" && v !== null && "value" in v ? v.value : v;
+      const labelCandidate = typeof v === "object" && v !== null && "label" in v ? v.label : k;
+
+      const normCandidateLabel = window.MeeshoFieldMapper.cleanLabel(labelCandidate).toLowerCase();
+      const normCandidateKey = window.MeeshoFieldMapper.labelToKey(k);
+
+      if (normCandidateLabel === normFdLabel || normCandidateKey === fd.key) {
+        if (valCandidate !== undefined && valCandidate !== null && String(valCandidate).trim() !== "") {
+          return valCandidate;
+        }
+      }
+    }
+
+    // 3. Defined aliases match
+    for (const [k, v] of Object.entries(profile.fields)) {
+      const valCandidate = typeof v === "object" && v !== null && "value" in v ? v.value : v;
+      const normCandidateKey = window.MeeshoFieldMapper.labelToKey(k);
+
+      if (aliases.includes(normCandidateKey)) {
+        if (valCandidate !== undefined && valCandidate !== null && String(valCandidate).trim() !== "") {
+          return valCandidate;
+        }
+      }
+    }
+
+    // 4. Strict prefix/suffix match (only when length >= 5 and excluding ambiguous tokens)
+    const ambiguousTokens = new Set(["unit", "size", "type", "name", "date", "rate", "code", "level", "value", "item", "weight"]);
+    for (const [k, v] of Object.entries(profile.fields)) {
+      const valCandidate = typeof v === "object" && v !== null && "value" in v ? v.value : v;
+      const labelCandidate = typeof v === "object" && v !== null && "label" in v ? v.label : k;
+      const normCandidateLabel = window.MeeshoFieldMapper.cleanLabel(labelCandidate).toLowerCase();
+
+      if (!ambiguousTokens.has(normFdLabel) && !ambiguousTokens.has(normCandidateLabel)) {
+        if (normCandidateLabel.length >= 6 && normFdLabel.length >= 6) {
+          if (normCandidateLabel.startsWith(normFdLabel) || normFdLabel.startsWith(normCandidateLabel)) {
+            if (valCandidate !== undefined && valCandidate !== null && String(valCandidate).trim() !== "") {
+              return valCandidate;
+            }
+          }
+        }
+      }
+    }
+
+    // 5. Custom mappings
+    if (customMappings[fd.key]) {
+      return customMappings[fd.key].value || "";
+    }
+
+    return "";
+  }
+
+  /**
    * Autofill all matching fields on the page from the active profile.
    * Can be aborted at any moment via stopAutofill().
    */
@@ -861,9 +1254,11 @@ window.MeeshoAutofillEngine = (() => {
     const { highlight = true, delayMs = 200, onProgress = null } = options;
     const fieldDescriptors = window.MeeshoFieldMapper.getAllListingFields(document);
     const filledFields = [];
-    const customMappings = profile.customMappings || {};
 
     try {
+      // -----------------------------------------------------------------------
+      // Pass 1: Standard form inputs and dropdowns
+      // -----------------------------------------------------------------------
       for (let i = 0; i < fieldDescriptors.length; i++) {
         if (abortRequested) {
           await ensureDropdownClosed(null);
@@ -888,73 +1283,13 @@ window.MeeshoAutofillEngine = (() => {
           onProgress(i + 1, fieldDescriptors.length, fd.label);
         }
 
-        // Look up target value in profile
-        let targetValue = "";
-        const entry = profile.fields[fd.key];
-        if (entry !== undefined) {
-          targetValue = typeof entry === "object" && entry !== null && "value" in entry ? entry.value : entry;
-        }
-
-        if (!targetValue) {
-          const normFdLabel = window.MeeshoFieldMapper.cleanLabel(fd.label).toLowerCase();
-          const aliases = window.MeeshoFieldMapper.getAliases(fd.key);
-
-          // Tier 1: Exact label or exact key match
-          for (const [k, v] of Object.entries(profile.fields)) {
-            const valCandidate = typeof v === "object" && v !== null && "value" in v ? v.value : v;
-            const labelCandidate = typeof v === "object" && v !== null && "label" in v ? v.label : k;
-
-            const normCandidateLabel = window.MeeshoFieldMapper.cleanLabel(labelCandidate).toLowerCase();
-            const normCandidateKey = window.MeeshoFieldMapper.labelToKey(k);
-
-            if (normCandidateLabel === normFdLabel || normCandidateKey === fd.key) {
-              targetValue = valCandidate;
-              break;
-            }
-          }
-
-          // Tier 2: Defined aliases match
-          if (!targetValue) {
-            for (const [k, v] of Object.entries(profile.fields)) {
-              const valCandidate = typeof v === "object" && v !== null && "value" in v ? v.value : v;
-              const normCandidateKey = window.MeeshoFieldMapper.labelToKey(k);
-
-              if (aliases.includes(normCandidateKey)) {
-                targetValue = valCandidate;
-                break;
-              }
-            }
-          }
-
-          // Tier 3: Strict prefix/suffix match (only when length >= 5 and excluding ambiguous tokens)
-          if (!targetValue) {
-            const ambiguousTokens = new Set(["unit", "size", "type", "name", "date", "rate", "code", "level", "value", "item", "weight"]);
-            for (const [k, v] of Object.entries(profile.fields)) {
-              const valCandidate = typeof v === "object" && v !== null && "value" in v ? v.value : v;
-              const labelCandidate = typeof v === "object" && v !== null && "label" in v ? v.label : k;
-              const normCandidateLabel = window.MeeshoFieldMapper.cleanLabel(labelCandidate).toLowerCase();
-
-              if (!ambiguousTokens.has(normFdLabel) && !ambiguousTokens.has(normCandidateLabel)) {
-                if (normCandidateLabel.length >= 6 && normFdLabel.length >= 6) {
-                  if (normCandidateLabel.startsWith(normFdLabel) || normFdLabel.startsWith(normCandidateLabel)) {
-                    targetValue = valCandidate;
-                    break;
-                  }
-                }
-              }
-            }
-          }
-        }
-
-        if (!targetValue && customMappings[fd.key]) {
-          targetValue = customMappings[fd.key].value;
-        }
+        const targetValue = resolveFieldValue(fd, profile);
 
         if (targetValue !== undefined && targetValue !== null && String(targetValue).trim() !== "") {
           let ok = false;
 
           if (fd.isCustomDropdown || fd.isDropdown || el.tagName === "SELECT") {
-            ok = await fillDropdownField(el, targetValue);
+            ok = await fillDropdownField(el, targetValue, fd.key);
           } else {
             ok = setNativeValue(el, targetValue);
           }
@@ -964,7 +1299,8 @@ window.MeeshoAutofillEngine = (() => {
             filledFields.push({
               key: fd.key,
               label: fd.label,
-              value: targetValue
+              value: targetValue,
+              element: el
             });
           }
 
@@ -978,15 +1314,82 @@ window.MeeshoAutofillEngine = (() => {
           }
         }
       }
+
+      // -----------------------------------------------------------------------
+      // Pass 2: Dynamic Dependent Fields (e.g. Pricing & Inventory Table)
+      // -----------------------------------------------------------------------
+      await sleep(350); // Allow React to finish mounting dependent components
+
+      if (!abortRequested) {
+        // Auto-check "Copy price details to all sizes" checkbox if present
+        const copyCheckboxes = Array.from(document.querySelectorAll("input[type='checkbox']"))
+          .filter(c => !c.closest("#meesho-autolisting-host") && !isDangerousActionElement(c));
+        for (const cb of copyCheckboxes) {
+          const parentText = (cb.parentElement?.textContent || cb.closest("label, div, tr")?.textContent || "").toLowerCase();
+          if (parentText.includes("copy price details to all sizes")) {
+            if (!cb.checked) {
+              dispatchFullClick(cb);
+              if (!cb.checked) {
+                cb.checked = true;
+                cb.dispatchEvent(new Event("change", { bubbles: true }));
+                cb.dispatchEvent(new Event("input",  { bubbles: true }));
+              }
+            }
+            break;
+          }
+        }
+
+        // Rescan all fields on the page to catch newly rendered table cells
+        const dynamicDescriptors = window.MeeshoFieldMapper.getAllListingFields(document);
+        for (let j = 0; j < dynamicDescriptors.length; j++) {
+          if (abortRequested) break;
+          const dfd = dynamicDescriptors[j];
+          const del = dfd.element;
+
+          if (isDangerousActionElement(del)) continue;
+          const dtype = (del.type || "").toLowerCase();
+          if (dtype === "submit" || dtype === "button") continue;
+
+          // If already filled in Pass 1 with non-empty value, skip
+          const alreadyFilled = filledFields.some(ff => ff.element === del);
+          const currentVal = del.tagName === "INPUT" || del.tagName === "TEXTAREA" ? del.value : (del.innerText || del.textContent || "");
+          if (alreadyFilled && currentVal && !currentVal.toLowerCase().startsWith("select")) {
+            continue;
+          }
+
+          const targetValue = resolveFieldValue(dfd, profile);
+          if (targetValue !== undefined && targetValue !== null && String(targetValue).trim() !== "") {
+            let ok = false;
+            if (dfd.isCustomDropdown || dfd.isDropdown || del.tagName === "SELECT") {
+              ok = await fillDropdownField(del, targetValue, dfd.key);
+            } else {
+              ok = setNativeValue(del, targetValue);
+            }
+
+            if (ok) {
+              if (highlight) highlightElement(del);
+              filledFields.push({
+                key: dfd.key,
+                label: dfd.label,
+                value: targetValue,
+                element: del
+              });
+            }
+            await sleep(80);
+          }
+        }
+      }
     } finally {
       isAutofillRunning = false;
       await ensureDropdownClosed(null);
     }
 
+    const finalTotal = window.MeeshoFieldMapper.getAllListingFields(document).length;
+
     return {
       success: true,
       stopped: abortRequested,
-      totalDetected: fieldDescriptors.length,
+      totalDetected: Math.max(finalTotal, fieldDescriptors.length),
       filledCount: filledFields.length,
       filledFields,
       profileName: profile.name
