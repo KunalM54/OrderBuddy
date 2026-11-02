@@ -741,9 +741,6 @@ window.MeeshoAutofillEngine = (() => {
     // option causes the first row (often `0`) to be committed instead.
     const optionRow = optionEl.closest("[role='option'], li, [class*='option' i], [class*='item' i], [class*='row' i], [class*='choice' i]") || optionEl;
 
-    // Scroll option into view with center alignment
-    optionRow.scrollIntoView({ behavior: "instant", block: "center" });
-
     // Click only the resolved option row.  Dispatching a second click to a
     // child and its parent can select a different row in React/AntD menus.
     const clickTargets = [optionRow];
@@ -851,8 +848,7 @@ window.MeeshoAutofillEngine = (() => {
     await ensureDropdownClosed(null);
     if (abortRequested) return false;
 
-    // 4. Scroll trigger into view smoothly
-    trigger.scrollIntoView({ behavior: "instant", block: "center" });
+    // Synthetic clicks target the element directly, even outside the viewport.
     await sleep(60);
     if (abortRequested) return false;
 
@@ -904,7 +900,7 @@ window.MeeshoAutofillEngine = (() => {
 
         // 2. If NOT immediately visible, use search input to filter the options
         if (!optionEl && searchInput && !searchInput.readOnly && !isDangerousActionElement(searchInput)) {
-          searchInput.focus?.();
+          searchInput.focus?.({ preventScroll: true });
 
           // React controlled input tracker bypass so Meesho updates its filter state:
           const prevVal = searchInput.value || "";
@@ -1254,6 +1250,10 @@ window.MeeshoAutofillEngine = (() => {
     const { highlight = true, delayMs = 200, onProgress = null } = options;
     const fieldDescriptors = window.MeeshoFieldMapper.getAllListingFields(document);
     const filledFields = [];
+    const attempted = new Set();
+    function followField(el) {
+      el.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "instant" });
+    }
 
     try {
       // -----------------------------------------------------------------------
@@ -1279,13 +1279,12 @@ window.MeeshoAutofillEngine = (() => {
         const type = (el.type || "").toLowerCase();
         if (type === "submit" || type === "button") continue;
 
-        if (typeof onProgress === "function") {
-          onProgress(i + 1, fieldDescriptors.length, fd.label);
-        }
-
         const targetValue = resolveFieldValue(fd, profile);
 
         if (targetValue !== undefined && targetValue !== null && String(targetValue).trim() !== "") {
+          attempted.add(el);
+          followField(el);
+          onProgress?.(i + 1, fieldDescriptors.length, fd.label);
           let ok = false;
 
           if (fd.isCustomDropdown || fd.isDropdown || el.tagName === "SELECT") {
@@ -1309,7 +1308,7 @@ window.MeeshoAutofillEngine = (() => {
             ? Math.max(delayMs, 200)
             : Math.max(delayMs, 80);
 
-          if (!abortRequested) {
+          if (!abortRequested && i + 1 < fieldDescriptors.length) {
             await sleep(stepDelay);
           }
         }
@@ -1318,7 +1317,7 @@ window.MeeshoAutofillEngine = (() => {
       // -----------------------------------------------------------------------
       // Pass 2: Dynamic Dependent Fields (e.g. Pricing & Inventory Table)
       // -----------------------------------------------------------------------
-      await sleep(350); // Allow React to finish mounting dependent components
+      // Dropdowns already wait for dependent controls after Apply.
 
       if (!abortRequested) {
         // Auto-check "Copy price details to all sizes" checkbox if present
@@ -1350,15 +1349,14 @@ window.MeeshoAutofillEngine = (() => {
           const dtype = (del.type || "").toLowerCase();
           if (dtype === "submit" || dtype === "button") continue;
 
-          // If already filled in Pass 1 with non-empty value, skip
-          const alreadyFilled = filledFields.some(ff => ff.element === del);
-          const currentVal = del.tagName === "INPUT" || del.tagName === "TEXTAREA" ? del.value : (del.innerText || del.textContent || "");
-          if (alreadyFilled && currentVal && !currentVal.toLowerCase().startsWith("select")) {
-            continue;
-          }
+          // A searchable dropdown can clear its input after committing a
+          // selection. Its verified result still counts on the second pass.
+          if (attempted.has(del)) continue;
 
           const targetValue = resolveFieldValue(dfd, profile);
           if (targetValue !== undefined && targetValue !== null && String(targetValue).trim() !== "") {
+            followField(del);
+            onProgress?.(j + 1, dynamicDescriptors.length, dfd.label);
             let ok = false;
             if (dfd.isCustomDropdown || dfd.isDropdown || del.tagName === "SELECT") {
               ok = await fillDropdownField(del, targetValue, dfd.key);
@@ -1375,7 +1373,7 @@ window.MeeshoAutofillEngine = (() => {
                 element: del
               });
             }
-            await sleep(80);
+            if (j + 1 < dynamicDescriptors.length) await sleep(80);
           }
         }
       }
