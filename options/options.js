@@ -123,7 +123,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Add custom field row
   btnAddCustomField.addEventListener("click", () => {
-    addDynamicFieldRow("", "");
+    const fieldName = prompt("Enter custom attribute name (e.g. Sleeve Length, Neck Style):");
+    if (fieldName === null) return;
+    const finalLabel = fieldName.trim() || "NEW ATTRIBUTE";
+    const item = addDynamicFieldRow(finalLabel, "");
+    if (item) {
+      const valInput = item.querySelector(".dyn-val");
+      if (valInput) valInput.focus();
+    }
   });
 
   // Backup Export
@@ -281,12 +288,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     const f = p.fields || {};
 
     // 1. Specifications
-    document.getElementById("field-gst").value = getFieldValue(f, "gst", ["gst"]);
+    document.getElementById("field-gst").value = getFieldValue(f, "gst", ["gst", "tax", "supplier_gst", "gst_percent"]);
     document.getElementById("field-hsn").value = getFieldValue(f, "hsn_code", ["hsn"]);
-    document.getElementById("field-weight").value = getFieldValue(f, "net_weight", ["weight"]);
-    document.getElementById("field-sku").value = getFieldValue(f, "style_code", ["sku", "style"]);
-    document.getElementById("field-product-name").value = getFieldValue(f, "product_name", ["title", "name"]);
-    document.getElementById("field-sizes").value = getFieldValue(f, "sizes", ["size"]);
+    document.getElementById("field-weight").value = getFieldValue(f, "net_weight", ["weight", "net_weight", "product_weight"]);
+    document.getElementById("field-sku").value = getFieldValue(f, "style_code", ["sku", "style", "style_code", "product id", "supplier_sku"]);
+    document.getElementById("field-product-name").value = getFieldValue(f, "product_name", ["title", "name", "product_name"]);
+    document.getElementById("field-sizes").value = getFieldValue(f, "sizes", ["size", "sizes"]);
 
     // 2. Attributes
     document.getElementById("field-care-instructions").value = getFieldValue(f, "care_instructions", ["care"]);
@@ -306,7 +313,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     // 3. Pricing
     document.getElementById("field-meesho-price").value = getFieldValue(f, "meesho_price", ["price", "selling"]);
     document.getElementById("field-wrong-return-price").value = getFieldValue(f, "wrong_return_price", ["return"]);
-    document.getElementById("field-mrp").value = getFieldValue(f, "mrp", ["maximum retail"]);
+    document.getElementById("field-mrp").value = getFieldValue(f, "mrp", ["mrp", "maximum retail", "product_mrp", "product mrp"]);
 
     // 4. Compliance
     document.getElementById("field-country").value = getFieldValue(f, "country_of_origin", ["country", "origin"]) || "India";
@@ -388,39 +395,73 @@ document.addEventListener("DOMContentLoaded", async () => {
     setField("packer_details", document.getElementById("field-packer").value.trim(), "Packer Details", "Compliance");
 
     // 5. Dynamic additional fields
-    const dynamicRows = dynamicFieldsContainer.querySelectorAll(".dynamic-field-row");
+    const dynamicRows = dynamicFieldsContainer.querySelectorAll(".dynamic-field-item, .dynamic-field-row");
     dynamicRows.forEach(row => {
-      const keyInput = row.querySelector(".dyn-key");
+      const keyInput = row.querySelector(".dyn-key-label, .dyn-key");
       const valInput = row.querySelector(".dyn-val");
       if (keyInput && valInput) {
-        const k = keyInput.value.trim().toLowerCase().replace(/[^a-z0-9]/g, "_");
+        const rawLabel = keyInput.value.trim();
+        const k = rawLabel.toLowerCase().replace(/[^a-z0-9]/g, "_").replace(/^_+|_+$/g, "");
         const v = valInput.value.trim();
-        const lbl = keyInput.value.trim();
         if (k) {
-          setField(k, v, lbl, "Dynamic Attributes");
+          setField(k, v, rawLabel, "Dynamic Attributes");
         }
       }
     });
+  }
+
+  function isStandardFieldKey(k, label = "") {
+    const norm = (k + " " + label).toLowerCase().replace(/[^a-z0-9]/g, "_");
+    const standardPatterns = [
+      /gst/,
+      /hsn/,
+      /weight/,
+      /sku/,
+      /style/,
+      /product_id/,
+      /product_name/,
+      /^title$/,
+      /^size_?$/,
+      /^sizes_?$/,
+      /care/,
+      /closure/,
+      /colo?ur/,
+      /filling/,
+      /generic/,
+      /material/,
+      /fabric/,
+      /quantity/,
+      /pattern/,
+      /print/,
+      /breadth/,
+      /height/,
+      /length/,
+      /^unit_?$/,
+      /product_unit/,
+      /description/,
+      /meesho_price/,
+      /customer_price/,
+      /return_price/,
+      /wrong_return/,
+      /mrp/,
+      /country/,
+      /origin/,
+      /manufacturer/,
+      /packer/
+    ];
+    return standardPatterns.some(p => p.test(norm));
   }
 
   function renderDynamicCapturedFields(p) {
     dynamicFieldsContainer.innerHTML = "";
     const f = p.fields || {};
 
-    const standardStaticKeys = new Set([
-      "gst", "hsn_code", "net_weight", "style_code", "product_name", "sizes",
-      "care_instructions", "closure_type", "color", "filling_material", "generic_name",
-      "material", "net_quantity", "pattern", "product_breadth", "product_height",
-      "product_length", "product_unit", "description", "meesho_price",
-      "wrong_return_price", "mrp", "country_of_origin", "manufacturer_details",
-      "packer_details"
-    ]);
-
     let count = 0;
     for (const [k, v] of Object.entries(f)) {
-      if (!standardStaticKeys.has(k)) {
-        const label = typeof v === "object" && v !== null && "label" in v ? v.label : k.replace(/_/g, " ");
-        const val = typeof v === "object" && v !== null && "value" in v ? v.value : v;
+      const label = typeof v === "object" && v !== null && "label" in v ? v.label : k.replace(/_/g, " ");
+      const val = typeof v === "object" && v !== null && "value" in v ? v.value : v;
+
+      if (!isStandardFieldKey(k, label)) {
         addDynamicFieldRow(label, val);
         count++;
       }
@@ -428,7 +469,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (count === 0) {
       dynamicFieldsContainer.innerHTML = `
-        <div style="padding: 24px; text-align: center; color: var(--text-secondary); background: var(--bg-aside); border: 2px dashed var(--border-medium); font-family: var(--font-body); font-size: 13px; font-weight: 500; text-transform: uppercase;">
+        <div class="dynamic-empty-state">
           NO EXTRA DYNAMIC FIELDS ADDED. ALL STANDARD ATTRIBUTES APPEAR ABOVE.
         </div>
       `;
@@ -436,35 +477,46 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   function addDynamicFieldRow(label = "", value = "") {
-    const emptyNotice = dynamicFieldsContainer.querySelector("div[style*='text-align: center']");
-    if (emptyNotice) dynamicFieldsContainer.innerHTML = "";
+    const emptyNotice = dynamicFieldsContainer.querySelector(".dynamic-empty-state, div[style*='text-align: center']");
+    if (emptyNotice) emptyNotice.remove();
 
-    const row = document.createElement("div");
-    row.className = "dynamic-field-row";
+    const item = document.createElement("div");
+    item.className = "form-group dynamic-field-item";
 
-    row.innerHTML = `
-      <input type="text" class="input dyn-key" placeholder="FIELD LABEL" value="${escapeHtml(label)}">
-      <input type="text" class="input dyn-val" placeholder="FIELD VALUE" value="${escapeHtml(value)}">
-      <button class="btn-remove-dyn" title="Remove Field" type="button">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter">
-          <polyline points="3 6 5 6 21 6"></polyline>
-          <path d="M19 6v14H7V6m3 0V4h4v2"></path>
-        </svg>
-      </button>
+    item.innerHTML = `
+      <div class="dyn-label-wrap">
+        <input type="text" class="dyn-key-label" placeholder="FIELD NAME" value="${escapeHtml(label)}" title="Click to edit field name">
+        <button class="btn-remove-dyn" title="Remove Field" type="button" aria-label="Remove Field">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14H7V6m3 0V4h4v2"></path>
+          </svg>
+        </button>
+      </div>
+      <input type="text" class="input dyn-val" placeholder="Enter ${escapeHtml(label ? label.toUpperCase() : 'value')}" value="${escapeHtml(value)}">
     `;
 
-    row.querySelector(".btn-remove-dyn").addEventListener("click", () => {
-      row.remove();
-      if (dynamicFieldsContainer.querySelectorAll(".dynamic-field-row").length === 0) {
+    const keyInput = item.querySelector(".dyn-key-label");
+    const valInput = item.querySelector(".dyn-val");
+
+    keyInput.addEventListener("input", (e) => {
+      const val = e.target.value.trim().toUpperCase();
+      valInput.placeholder = val ? `Enter ${val}` : "Enter value";
+    });
+
+    item.querySelector(".btn-remove-dyn").addEventListener("click", () => {
+      item.remove();
+      if (dynamicFieldsContainer.querySelectorAll(".dynamic-field-item, .dynamic-field-row").length === 0) {
         dynamicFieldsContainer.innerHTML = `
-          <div style="padding: 24px; text-align: center; color: var(--text-secondary); background: var(--bg-aside); border: 2px dashed var(--border-medium); font-family: var(--font-body); font-size: 13px; font-weight: 500; text-transform: uppercase;">
+          <div class="dynamic-empty-state">
             NO EXTRA DYNAMIC FIELDS ADDED. ALL STANDARD ATTRIBUTES APPEAR ABOVE.
           </div>
         `;
       }
     });
 
-    dynamicFieldsContainer.appendChild(row);
+    dynamicFieldsContainer.appendChild(item);
+    return item;
   }
 
   async function saveToStorage() {

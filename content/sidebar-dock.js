@@ -16,13 +16,31 @@ window.MeeshoSidebar = (() => {
     ).forEach(el => el.remove());
   }
 
+  function isExtensionValid() {
+    try {
+      return Boolean(typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.id);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function handleContextInvalidated() {
+    setStatus("EXTENSION RELOADED. PLEASE REFRESH PAGE (F5).", "warning");
+    alert("OrderBuddy extension was updated or reloaded in the background.\n\nPlease refresh this tab (F5) to reconnect.");
+  }
+
   async function init() {
     purgeLegacyFloatingElements();
-    const data = await chrome.storage.local.get(["profiles", "activeProfileId", "settings"]);
-    profilesList = data.profiles || [];
-    currentProfileId = data.activeProfileId || (profilesList[0] ? profilesList[0].id : null);
+    if (!isExtensionValid()) return;
 
-    render();
+    try {
+      const data = await chrome.storage.local.get(["profiles", "activeProfileId", "settings"]);
+      profilesList = data.profiles || [];
+      currentProfileId = data.activeProfileId || (profilesList[0] ? profilesList[0].id : null);
+      render();
+    } catch (err) {
+      console.warn("[OrderBuddy] Extension context not available:", err);
+    }
   }
 
   function getActiveProfile() {
@@ -266,12 +284,24 @@ window.MeeshoSidebar = (() => {
     // Profile switch
     profileSelect?.addEventListener("change", async (e) => {
       currentProfileId = e.target.value;
-      await chrome.storage.local.set({ activeProfileId: currentProfileId });
+      if (!isExtensionValid()) {
+        handleContextInvalidated();
+        return;
+      }
+      try {
+        await chrome.storage.local.set({ activeProfileId: currentProfileId });
+      } catch (err) {
+        handleContextInvalidated();
+      }
       render();
     });
 
     // Create New Profile
     newProfileBtn?.addEventListener("click", async () => {
+      if (!isExtensionValid()) {
+        handleContextInvalidated();
+        return;
+      }
       const name = prompt("Enter a name for the new profile (e.g. Godari Baby Set, Sarees):");
       if (!name || !name.trim()) return;
 
@@ -286,9 +316,13 @@ window.MeeshoSidebar = (() => {
 
       profilesList.push(newP);
       currentProfileId = newP.id;
-      await chrome.storage.local.set({ profiles: profilesList, activeProfileId: currentProfileId });
-      render();
-      setStatus(`CREATED PROFILE "${newP.name.toUpperCase()}".`, "success");
+      try {
+        await chrome.storage.local.set({ profiles: profilesList, activeProfileId: currentProfileId });
+        render();
+        setStatus(`CREATED PROFILE "${newP.name.toUpperCase()}".`, "success");
+      } catch (err) {
+        handleContextInvalidated();
+      }
     });
 
     // Autofill Now (With 1-Click Stop Feature)
@@ -353,6 +387,10 @@ window.MeeshoSidebar = (() => {
 
     // Auto Capture ALL Fields
     captureBtn?.addEventListener("click", async () => {
+      if (!isExtensionValid()) {
+        handleContextInvalidated();
+        return;
+      }
       let profile = getActiveProfile();
 
       if (!profile) {
@@ -384,9 +422,13 @@ window.MeeshoSidebar = (() => {
         const idx = profilesList.findIndex(p => p.id === profile.id);
         if (idx !== -1) profilesList[idx] = profile;
 
-        await chrome.storage.local.set({ profiles: profilesList, activeProfileId: profile.id });
-        render();
-        setStatus(`CAPTURED ${captureResult.totalDetected} FIELDS INTO "${profile.name.toUpperCase()}".`, "success");
+        try {
+          await chrome.storage.local.set({ profiles: profilesList, activeProfileId: profile.id });
+          render();
+          setStatus(`CAPTURED ${captureResult.totalDetected} FIELDS INTO "${profile.name.toUpperCase()}".`, "success");
+        } catch (err) {
+          handleContextInvalidated();
+        }
       } else {
         setStatus("NO LISTING FORM FIELDS FOUND ON THIS PAGE.", "warning");
       }
@@ -414,6 +456,10 @@ window.MeeshoSidebar = (() => {
 
     // Save Profile Changes from inline editor
     saveFieldsBtn?.addEventListener("click", async () => {
+      if (!isExtensionValid()) {
+        handleContextInvalidated();
+        return;
+      }
       const profile = getActiveProfile();
       if (!profile) return;
 
@@ -434,8 +480,12 @@ window.MeeshoSidebar = (() => {
       const idx = profilesList.findIndex(p => p.id === profile.id);
       if (idx !== -1) profilesList[idx] = profile;
 
-      await chrome.storage.local.set({ profiles: profilesList });
-      setStatus("PROFILE SAVED SUCCESSFULLY.", "success");
+      try {
+        await chrome.storage.local.set({ profiles: profilesList });
+        setStatus("PROFILE SAVED SUCCESSFULLY.", "success");
+      } catch (err) {
+        handleContextInvalidated();
+      }
     });
 
     // Row remove buttons
@@ -453,7 +503,19 @@ window.MeeshoSidebar = (() => {
 
     // Full Profile Manager
     managerBtn?.addEventListener("click", () => {
-      chrome.runtime.sendMessage({ type: "OPEN_OPTIONS_PAGE" });
+      if (!isExtensionValid()) {
+        handleContextInvalidated();
+        return;
+      }
+      try {
+        chrome.runtime.sendMessage({ type: "OPEN_OPTIONS_PAGE" }, () => {
+          if (chrome.runtime.lastError) {
+            handleContextInvalidated();
+          }
+        });
+      } catch (err) {
+        handleContextInvalidated();
+      }
     });
   }
 

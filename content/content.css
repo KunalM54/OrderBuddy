@@ -483,16 +483,10 @@
 }
 
 .meesho-field-row {
-  margin-bottom: 8px !important;
-  background: #FAFAFA !important;
-  border: 2px solid #E5E5E5 !important;
-  border-radius: 0px !important;
-  padding: 8px 10px !important;
-  transition: border-color 0.15s ease !important;
-}
-
-.meesho-field-row:hover {
-  border-color: #0A0A0A !important;
+  margin-bottom: 12px !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
 }
 
 .field-label-wrap {
