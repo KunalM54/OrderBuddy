@@ -71,12 +71,20 @@ body {
 .brand-logo {
   width: 32px;
   height: 32px;
-  background: var(--color-primary);
+  background: #FFFFFF;
   border: 2px solid var(--border-strong);
-  color: var(--color-tertiary);
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+  padding: 2px;
+}
+
+.brand-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 .title-wrap {

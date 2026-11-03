@@ -89,11 +89,7 @@ window.MeeshoSidebar = (() => {
         <div class="meesho-sb-header">
           <div class="meesho-sb-brand">
             <div class="brand-icon-box" aria-hidden="true">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter">
-                <rect x="3" y="3" width="18" height="18"></rect>
-                <line x1="3" y1="9" x2="21" y2="9"></line>
-                <line x1="9" y1="21" x2="9" y2="9"></line>
-              </svg>
+              <img src="${chrome.runtime.getURL('icons/logo.png')}" alt="OrderBuddy Logo" class="meesho-sb-logo-img">
             </div>
             <div class="brand-text-col">
               <span class="brand-title">ORDERBUDDY</span>
