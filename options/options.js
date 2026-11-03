@@ -1,7 +1,6 @@
 /**
  * OrderBuddy - Profile Manager Logic
- * Single-page layout matching Meesho Supplier catalog upload sections.
- * Clean state, zero dummy profiles, and category-agnostic field handling.
+ * VoiceBox Editorial Design System
  */
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -57,7 +56,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     saveToStorage();
     renderSidebarList();
     loadProfileToForm(newP);
-    showToast(`Created profile "${newP.name}"`);
+    showToast(`CREATED PROFILE "${newP.name.toUpperCase()}"`);
   });
 
   // Duplicate profile
@@ -74,7 +73,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     saveToStorage();
     renderSidebarList();
     loadProfileToForm(cloned);
-    showToast(`Duplicated into "${cloned.name}"`);
+    showToast(`DUPLICATED INTO "${cloned.name.toUpperCase()}"`);
   });
 
   // Delete profile
@@ -95,7 +94,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     saveToStorage();
     renderSidebarList();
     loadProfileToForm(editingProfile);
-    showToast("Profile deleted.");
+    showToast("PROFILE DELETED.");
   });
 
   // Set as Default Active Profile
@@ -105,7 +104,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     saveToStorage();
     renderSidebarList();
     updateHeaderStatus();
-    showToast(`"${editingProfile.name}" is now the active default profile!`);
+    showToast(`"${editingProfile.name.toUpperCase()}" IS NOW ACTIVE DEFAULT.`);
   });
 
   // Save changes from single-page form
@@ -117,9 +116,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     saveToStorage();
     renderSidebarList();
-    activeTitle.textContent = editingProfile.name;
-    activeSubtitle.textContent = `${editingProfile.category || "General"} • Updated just now`;
-    showToast("All profile changes saved successfully!");
+    activeTitle.textContent = editingProfile.name.toUpperCase();
+    activeSubtitle.textContent = `${(editingProfile.category || "General").toUpperCase()} // UPDATED JUST NOW`;
+    showToast("PROFILE CHANGES SAVED SUCCESSFULLY.");
   });
 
   // Add custom field row
@@ -145,7 +144,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    showToast("Exported profiles backup JSON file!");
+    showToast("EXPORTED BACKUP JSON FILE.");
   });
 
   // Backup Import
@@ -173,7 +172,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         editingProfile = profiles.find(p => p.id === activeProfileId) || profiles[0] || null;
         renderSidebarList();
         loadProfileToForm(editingProfile);
-        showToast(`Successfully imported ${profiles.length} profiles!`);
+        showToast(`IMPORTED ${profiles.length} PROFILES SUCCESSFULLY.`);
       } catch (err) {
         alert("Failed to parse JSON backup file: " + err.message);
       }
@@ -204,8 +203,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (profiles.length === 0) {
       profileListEl.innerHTML = `
-        <li style="padding: 16px 12px; color: #94a3b8; font-size: 12px; text-align: center;">
-          No profiles yet.<br>Click "＋ Create New Profile" or use "Auto Capture" on Meesho.
+        <li style="padding: 28px 16px; color: var(--text-secondary); font-family: var(--font-body); font-size: 13px; font-weight: 500; text-align: center; line-height: 1.6; text-transform: uppercase;">
+          NO PROFILES SAVED YET.<br>CLICK "NEW PROFILE" TO BEGIN.
         </li>
       `;
       return;
@@ -228,9 +227,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       li.innerHTML = `
         <div class="profile-info">
           <span class="profile-item-name">${escapeHtml(p.name)}</span>
-          <span class="profile-item-sub">${escapeHtml(p.category || "General")}</span>
+          <span class="profile-item-sub">${escapeHtml((p.category || "General").toUpperCase())}</span>
         </div>
-        ${isActiveDefault ? `<span class="profile-pill-badge active" style="font-size:10px; padding:2px 6px;">DEFAULT</span>` : ""}
+        ${isActiveDefault ? `<span class="status-chip active" style="font-size:10px; padding:2px 6px;">DEFAULT</span>` : ""}
       `;
 
       li.addEventListener("click", () => {
@@ -245,12 +244,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   function getFieldValue(fields, key, fallbackLabels = []) {
     if (!fields) return "";
-    // Direct match
     if (fields[key] !== undefined) {
       const v = fields[key];
       return typeof v === "object" && v !== null && "value" in v ? v.value : v;
     }
-    // Alias match
     for (const [k, v] of Object.entries(fields)) {
       const val = typeof v === "object" && v !== null && "value" in v ? v.value : v;
       const label = typeof v === "object" && v !== null && "label" in v ? v.label : k;
@@ -267,15 +264,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   function loadProfileToForm(p) {
     if (!p) {
-      activeTitle.textContent = "No Profile Selected";
-      activeSubtitle.textContent = "Create a profile or capture one from a Meesho listing form";
+      activeTitle.textContent = "NO PROFILE SELECTED";
+      activeSubtitle.textContent = "CREATE A PROFILE OR CAPTURE ONE FROM A LISTING FORM";
       activeStatusBadge.style.display = "none";
       clearForm();
       return;
     }
 
-    activeTitle.textContent = p.name;
-    activeSubtitle.textContent = `${p.category || "General"} • ID: ${p.id}`;
+    activeTitle.textContent = p.name.toUpperCase();
+    activeSubtitle.textContent = `${(p.category || "General").toUpperCase()} // ID: ${p.id}`;
     updateHeaderStatus();
 
     document.getElementById("profile-name-input").value = p.name || "";
@@ -283,7 +280,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const f = p.fields || {};
 
-    // 1. Product, Size and Inventory
+    // 1. Specifications
     document.getElementById("field-gst").value = getFieldValue(f, "gst", ["gst"]);
     document.getElementById("field-hsn").value = getFieldValue(f, "hsn_code", ["hsn"]);
     document.getElementById("field-weight").value = getFieldValue(f, "net_weight", ["weight"]);
@@ -291,7 +288,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("field-product-name").value = getFieldValue(f, "product_name", ["title", "name"]);
     document.getElementById("field-sizes").value = getFieldValue(f, "sizes", ["size"]);
 
-    // 2. Product Details
+    // 2. Attributes
     document.getElementById("field-care-instructions").value = getFieldValue(f, "care_instructions", ["care"]);
     document.getElementById("field-closure-type").value = getFieldValue(f, "closure_type", ["closure"]);
     document.getElementById("field-color").value = getFieldValue(f, "color", ["colour"]);
@@ -306,17 +303,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("field-prod-unit").value = getFieldValue(f, "product_unit", ["unit"]);
     document.getElementById("field-description").value = getFieldValue(f, "description", ["desc"]);
 
-    // 3. Pricing Details
+    // 3. Pricing
     document.getElementById("field-meesho-price").value = getFieldValue(f, "meesho_price", ["price", "selling"]);
     document.getElementById("field-wrong-return-price").value = getFieldValue(f, "wrong_return_price", ["return"]);
     document.getElementById("field-mrp").value = getFieldValue(f, "mrp", ["maximum retail"]);
 
-    // 4. Compliance & Manufacturer
+    // 4. Compliance
     document.getElementById("field-country").value = getFieldValue(f, "country_of_origin", ["country", "origin"]) || "India";
     document.getElementById("field-manufacturer").value = getFieldValue(f, "manufacturer_details", ["mfg", "manufacturer"]);
     document.getElementById("field-packer").value = getFieldValue(f, "packer_details", ["packer"]);
 
-    // Render any additional dynamic fields that were captured
+    // 5. Dynamic additional fields
     renderDynamicCapturedFields(p);
   }
 
@@ -333,12 +330,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
     if (editingProfile.id === activeProfileId) {
       activeStatusBadge.style.display = "inline-block";
-      activeStatusBadge.className = "profile-pill-badge active";
-      activeStatusBadge.textContent = "Active Default";
+      activeStatusBadge.className = "status-chip active";
+      activeStatusBadge.textContent = "DEFAULT";
     } else {
       activeStatusBadge.style.display = "inline-block";
-      activeStatusBadge.className = "profile-pill-badge inactive";
-      activeStatusBadge.textContent = "Inactive";
+      activeStatusBadge.className = "status-chip inactive";
+      activeStatusBadge.textContent = "INACTIVE";
     }
   }
 
@@ -357,35 +354,35 @@ document.addEventListener("DOMContentLoaded", async () => {
       };
     }
 
-    // 1. Product, Size and Inventory
+    // 1. Specifications
     setField("gst", document.getElementById("field-gst").value.trim(), "GST (%)", "Product, Size and Inventory");
     setField("hsn_code", document.getElementById("field-hsn").value.trim(), "HSN Code", "Product, Size and Inventory");
     setField("net_weight", document.getElementById("field-weight").value.trim(), "Net Weight (gms)", "Product, Size and Inventory");
-    setField("style_code", document.getElementById("field-sku").value.trim(), "Style code / Product ID", "Product, Size and Inventory");
+    setField("style_code", document.getElementById("field-sku").value.trim(), "Style Code / SKU", "Product, Size and Inventory");
     setField("product_name", document.getElementById("field-product-name").value.trim(), "Product Name", "Product, Size and Inventory");
-    setField("sizes", document.getElementById("field-sizes").value.trim(), "Sizes Available", "Product, Size and Inventory");
+    setField("sizes", document.getElementById("field-sizes").value.trim(), "Available Sizes", "Product, Size and Inventory");
 
-    // 2. Product Details
+    // 2. Attributes
     setField("care_instructions", document.getElementById("field-care-instructions").value.trim(), "Care Instructions", "Product Details");
     setField("closure_type", document.getElementById("field-closure-type").value.trim(), "Closure Type", "Product Details");
     setField("color", document.getElementById("field-color").value.trim(), "Color", "Product Details");
     setField("filling_material", document.getElementById("field-filling-material").value.trim(), "Filling Material", "Product Details");
     setField("generic_name", document.getElementById("field-generic-name").value.trim(), "Generic Name", "Product Details");
     setField("material", document.getElementById("field-material").value.trim(), "Material", "Product Details");
-    setField("net_quantity", document.getElementById("field-net-quantity").value.trim(), "Net Quantity (N)", "Product Details");
+    setField("net_quantity", document.getElementById("field-net-quantity").value.trim(), "Net Quantity", "Product Details");
     setField("pattern", document.getElementById("field-pattern").value.trim(), "Pattern", "Product Details");
-    setField("product_breadth", document.getElementById("field-prod-breadth").value.trim(), "Product Breadth", "Product Details");
-    setField("product_height", document.getElementById("field-prod-height").value.trim(), "Product Height", "Product Details");
-    setField("product_length", document.getElementById("field-prod-length").value.trim(), "Product Length", "Product Details");
-    setField("product_unit", document.getElementById("field-prod-unit").value.trim(), "Product Unit", "Product Details");
-    setField("description", document.getElementById("field-description").value.trim(), "Product Description", "Product Details");
+    setField("product_breadth", document.getElementById("field-prod-breadth").value.trim(), "Breadth", "Product Details");
+    setField("product_height", document.getElementById("field-prod-height").value.trim(), "Height", "Product Details");
+    setField("product_length", document.getElementById("field-prod-length").value.trim(), "Length", "Product Details");
+    setField("product_unit", document.getElementById("field-prod-unit").value.trim(), "Unit", "Product Details");
+    setField("description", document.getElementById("field-description").value.trim(), "Description", "Product Details");
 
-    // 3. Pricing Details
+    // 3. Pricing
     setField("meesho_price", document.getElementById("field-meesho-price").value.trim(), "Meesho Price", "Pricing Details");
     setField("wrong_return_price", document.getElementById("field-wrong-return-price").value.trim(), "Wrong Return Price", "Pricing Details");
     setField("mrp", document.getElementById("field-mrp").value.trim(), "MRP", "Pricing Details");
 
-    // 4. Compliance & Manufacturer
+    // 4. Compliance
     setField("country_of_origin", document.getElementById("field-country").value.trim(), "Country of Origin", "Compliance");
     setField("manufacturer_details", document.getElementById("field-manufacturer").value.trim(), "Manufacturer Details", "Compliance");
     setField("packer_details", document.getElementById("field-packer").value.trim(), "Packer Details", "Compliance");
@@ -431,9 +428,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (count === 0) {
       dynamicFieldsContainer.innerHTML = `
-        <div style="padding: 24px; text-align: center; color: #94a3b8; background: #f8fafc; border-radius: 8px; border: 1px dashed #cbd5e1;">
-          No extra dynamic fields yet. All standard fields appear in the sections above.<br>
-          Any category-specific attributes captured from Meesho will appear here automatically!
+        <div style="padding: 24px; text-align: center; color: var(--text-secondary); background: var(--bg-aside); border: 2px dashed var(--border-medium); font-family: var(--font-body); font-size: 13px; font-weight: 500; text-transform: uppercase;">
+          NO EXTRA DYNAMIC FIELDS ADDED. ALL STANDARD ATTRIBUTES APPEAR ABOVE.
         </div>
       `;
     }
@@ -447,13 +443,25 @@ document.addEventListener("DOMContentLoaded", async () => {
     row.className = "dynamic-field-row";
 
     row.innerHTML = `
-      <input type="text" class="input dyn-key" placeholder="Field Label (e.g. Saree Length, Fabric)" value="${escapeHtml(label)}">
-      <input type="text" class="input dyn-val" placeholder="Field Value" value="${escapeHtml(value)}">
-      <button class="btn-remove-dyn" title="Remove Field">&times;</button>
+      <input type="text" class="input dyn-key" placeholder="FIELD LABEL" value="${escapeHtml(label)}">
+      <input type="text" class="input dyn-val" placeholder="FIELD VALUE" value="${escapeHtml(value)}">
+      <button class="btn-remove-dyn" title="Remove Field" type="button">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6v14H7V6m3 0V4h4v2"></path>
+        </svg>
+      </button>
     `;
 
     row.querySelector(".btn-remove-dyn").addEventListener("click", () => {
       row.remove();
+      if (dynamicFieldsContainer.querySelectorAll(".dynamic-field-row").length === 0) {
+        dynamicFieldsContainer.innerHTML = `
+          <div style="padding: 24px; text-align: center; color: var(--text-secondary); background: var(--bg-aside); border: 2px dashed var(--border-medium); font-family: var(--font-body); font-size: 13px; font-weight: 500; text-transform: uppercase;">
+            NO EXTRA DYNAMIC FIELDS ADDED. ALL STANDARD ATTRIBUTES APPEAR ABOVE.
+          </div>
+        `;
+      }
     });
 
     dynamicFieldsContainer.appendChild(row);

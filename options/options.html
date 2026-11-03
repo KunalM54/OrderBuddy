@@ -3,35 +3,55 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OrderBuddy - Profile Manager</title>
+  <title>OrderBuddy — Profile Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="options.css">
 </head>
 <body>
   <div class="app-layout">
-    <!-- Sidebar -->
+    <!-- VoiceBox Editorial Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-header">
         <div class="brand">
-          <div>
-            <h2 class="brand-name">OrderBuddy</h2>
-            <span class="brand-badge">Catalog Profile Manager</span>
+          <div class="brand-logo" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter">
+              <rect x="3" y="3" width="18" height="18"></rect>
+              <line x1="3" y1="9" x2="21" y2="9"></line>
+              <line x1="9" y1="21" x2="9" y2="9"></line>
+            </svg>
+          </div>
+          <div class="brand-info">
+            <h1 class="brand-name">ORDERBUDDY</h1>
+            <span class="brand-tag">PROFILE MANAGER</span>
           </div>
         </div>
       </div>
 
       <div class="sidebar-actions">
-        <button id="btn-create-profile" class="btn-primary w-full">
-          ＋ Create New Profile
+        <button id="btn-create-profile" class="btn-create-new">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span>NEW PROFILE</span>
         </button>
       </div>
 
-      <div class="search-box">
-        <input type="text" id="profile-search" placeholder="Search saved profiles..." class="input-search">
+      <div class="search-wrap">
+        <div class="search-box">
+          <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="profile-search" placeholder="FILTER PROFILES..." class="input-search">
+        </div>
       </div>
 
       <div class="profile-list-header">
-        <span>SAVED PROFILES</span>
-        <span id="profiles-count" class="badge">0</span>
+        <span class="section-label">SAVED PROFILES</span>
+        <span id="profiles-count" class="mono-badge">0</span>
       </div>
 
       <ul id="profile-list" class="profile-list">
@@ -39,68 +59,102 @@
       </ul>
 
       <div class="sidebar-footer">
-        <button id="btn-export-json" class="btn-outline w-full" title="Export all profiles to local JSON backup">
-          Export Backup
-        </button>
-        <button id="btn-import-json-trigger" class="btn-outline w-full" title="Restore profiles from JSON backup">
-          Import Backup
-        </button>
+        <div class="backup-btn-grid">
+          <button id="btn-export-json" class="btn-sidebar-tool" title="Export profiles to JSON">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter">
+              <path d="M21 15v4H5v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>EXPORT</span>
+          </button>
+          <button id="btn-import-json-trigger" class="btn-sidebar-tool" title="Restore profiles from JSON">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter">
+              <path d="M21 15v4H5v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            <span>IMPORT</span>
+          </button>
+        </div>
         <input type="file" id="import-file-input" accept=".json" style="display:none;">
       </div>
     </aside>
 
-    <!-- Main Content Area -->
+    <!-- Main Content Stage -->
     <main class="main-content">
       <!-- Top Action Bar -->
       <header class="content-header">
         <div class="header-titles">
           <div class="title-with-pill">
-            <h1 id="active-profile-title">No Profile Selected</h1>
-            <span id="active-status-badge" class="profile-pill-badge">Active Default</span>
+            <h2 id="active-profile-title" class="title-heading">NO PROFILE SELECTED</h2>
+            <span id="active-status-badge" class="status-chip active">DEFAULT</span>
           </div>
-          <p id="active-profile-subtitle" class="subtitle">Single-page view matching Meesho Catalog Upload</p>
+          <p id="active-profile-subtitle" class="subtitle">SELECT OR CREATE A PROFILE TO CONFIGURE CATALOG ATTRIBUTES</p>
         </div>
         <div class="header-actions">
-          <button id="btn-set-default" class="btn-secondary" title="Set this as default profile for one-click autofill">
-            Set as Default
+          <button id="btn-set-default" class="btn-secondary" title="Set as default profile for autofill">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+            <span>SET DEFAULT</span>
           </button>
-          <button id="btn-duplicate-profile" class="btn-secondary" title="Duplicate this profile">
-            Duplicate
+          <button id="btn-duplicate-profile" class="btn-secondary" title="Duplicate profile">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter">
+              <rect x="9" y="9" width="13" height="13"></rect>
+              <path d="M5 15H4V4h11v1"></path>
+            </svg>
+            <span>DUPLICATE</span>
           </button>
-          <button id="btn-delete-profile" class="btn-danger" title="Delete this profile">
-            Delete
+          <button id="btn-delete-profile" class="btn-destructive" title="Delete profile">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14H7V6m3 0V4h4v2"></path>
+            </svg>
+            <span>DELETE</span>
           </button>
-          <button id="btn-save-profile" class="btn-primary">
-            Save All Changes
+          <button id="btn-save-profile" class="btn-primary" title="Save profile changes">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter">
+              <path d="M19 21H5V5h11l5 5v11z"></path>
+              <polyline points="17 21 17 13 7 13 7 21"></polyline>
+              <polyline points="7 3 7 8 15 8"></polyline>
+            </svg>
+            <span>SAVE PROFILE</span>
           </button>
         </div>
       </header>
 
-      <!-- Single Continuous Page View (No Divided Tabs!) -->
+      <!-- Scrollable Form Container -->
       <div id="single-page-scroll" class="single-page-container">
         <!-- Profile Identity Card -->
-        <section class="meesho-card">
+        <section class="voicebox-card elevated">
           <div class="card-header-bar">
-            <h2>Profile Setup</h2>
-            <span class="step-tag">Template Info</span>
+            <div>
+              <h3 class="card-title">IDENTITY</h3>
+              <p class="card-desc">Profile naming and category classification</p>
+            </div>
+            <span class="card-mono-tag">01 // GENERAL</span>
           </div>
           <div class="form-grid-2">
             <div class="form-group">
-              <label for="profile-name-input">Profile Name <span class="req">*</span></label>
-              <input type="text" id="profile-name-input" placeholder="e.g. Godari Baby Set, Saree Festive, Kurtis" class="input">
+              <label for="profile-name-input">PROFILE NAME <span class="req">*</span></label>
+              <input type="text" id="profile-name-input" placeholder="e.g. Godari Baby Set, Festive Saree" class="input">
             </div>
             <div class="form-group">
-              <label for="profile-category-input">Product Category / Folder</label>
-              <input type="text" id="profile-category-input" placeholder="e.g. Baby Care, Women Ethnic Wear, Jewellery" class="input">
+              <label for="profile-category-input">CATEGORY / TAG</label>
+              <input type="text" id="profile-category-input" placeholder="e.g. Baby Care, Women Ethnic, Kurtis" class="input">
             </div>
           </div>
         </section>
 
-        <!-- Section 1: Product, Size and Inventory (Exact Meesho Layout) -->
-        <section class="meesho-card">
+        <!-- Section 1: Product Specifications -->
+        <section class="voicebox-card">
           <div class="card-header-bar">
-            <h2>Product, Size and Inventory</h2>
-            <span class="step-tag">Mandatory Specifications</span>
+            <div>
+              <h3 class="card-title">SPECIFICATIONS</h3>
+              <p class="card-desc">Identifiers, dimensions, tax codes, and style tags</p>
+            </div>
+            <span class="card-mono-tag">02 // SPECS</span>
           </div>
           <div class="form-grid-2">
             <div class="form-group">
@@ -109,168 +163,182 @@
             </div>
 
             <div class="form-group">
-              <label for="field-hsn">HSN Code <span class="req">*</span></label>
-              <input type="text" id="field-hsn" placeholder="e.g. 630492 or 5208" class="input">
+              <label for="field-hsn">HSN CODE <span class="req">*</span></label>
+              <input type="text" id="field-hsn" placeholder="e.g. 630492" class="input">
             </div>
 
             <div class="form-group">
-              <label for="field-weight">Net Weight (gms) <span class="req">*</span></label>
+              <label for="field-weight">NET WEIGHT (GMS) <span class="req">*</span></label>
               <input type="text" id="field-weight" placeholder="e.g. 250" class="input">
             </div>
 
             <div class="form-group">
-              <label for="field-sku">Style code / Product ID <span class="opt">(optional)</span></label>
+              <label for="field-sku">STYLE CODE / SKU</label>
               <input type="text" id="field-sku" placeholder="e.g. Micro5_8" class="input">
             </div>
 
             <div class="form-group grid-col-span-2">
-              <label for="field-product-name">Product Name <span class="req">*</span></label>
-              <input type="text" id="field-product-name" placeholder="e.g. New Born Baby Godadi | Pack of 5" class="input">
+              <label for="field-product-name">PRODUCT NAME <span class="req">*</span></label>
+              <input type="text" id="field-product-name" placeholder="e.g. New Born Baby Godadi (Pack of 5)" class="input">
             </div>
 
             <div class="form-group grid-col-span-2">
-              <label for="field-sizes">Sizes Available</label>
-              <input type="text" id="field-sizes" placeholder="e.g. Free Size or S, M, L, XL" class="input">
+              <label for="field-sizes">AVAILABLE SIZES</label>
+              <input type="text" id="field-sizes" placeholder="e.g. Free Size, S, M, L, XL" class="input">
             </div>
           </div>
         </section>
 
-        <!-- Section 2: Product Details & Attributes (Exact Meesho Layout) -->
-        <section class="meesho-card">
+        <!-- Section 2: Product Details & Attributes -->
+        <section class="voicebox-card">
           <div class="card-header-bar">
-            <h2>Product Details</h2>
-            <span class="step-tag">Category Attributes</span>
+            <div>
+              <h3 class="card-title">ATTRIBUTES</h3>
+              <p class="card-desc">Material, utility, and visual specifications</p>
+            </div>
+            <span class="card-mono-tag">03 // DETAILS</span>
           </div>
           <div class="form-grid-2">
             <div class="form-group">
-              <label for="field-care-instructions">Care Instructions</label>
-              <input type="text" id="field-care-instructions" placeholder="e.g. Machine Wash, Dry Clean" class="input">
+              <label for="field-care-instructions">CARE INSTRUCTIONS</label>
+              <input type="text" id="field-care-instructions" placeholder="e.g. Machine Wash, Hand Wash" class="input">
             </div>
 
             <div class="form-group">
-              <label for="field-closure-type">Closure Type</label>
-              <input type="text" id="field-closure-type" placeholder="e.g. Knots, Button, Zipper, Elastic" class="input">
+              <label for="field-closure-type">CLOSURE TYPE</label>
+              <input type="text" id="field-closure-type" placeholder="e.g. Knots, Buttons, Zipper" class="input">
             </div>
 
             <div class="form-group">
-              <label for="field-color">Color</label>
-              <input type="text" id="field-color" placeholder="e.g. Multicolor, Navy Blue, Red" class="input">
+              <label for="field-color">COLOR</label>
+              <input type="text" id="field-color" placeholder="e.g. Multicolor, Navy Blue" class="input">
             </div>
 
             <div class="form-group">
-              <label for="field-filling-material">Filling Material</label>
-              <input type="text" id="field-filling-material" placeholder="e.g. Cotton, Foam, Microfiber" class="input">
+              <label for="field-filling-material">FILLING MATERIAL</label>
+              <input type="text" id="field-filling-material" placeholder="e.g. Cotton, Foam" class="input">
             </div>
 
             <div class="form-group">
-              <label for="field-generic-name">Generic Name</label>
-              <input type="text" id="field-generic-name" placeholder="e.g. Baby Bedding, Godadi, Saree" class="input">
+              <label for="field-generic-name">GENERIC NAME</label>
+              <input type="text" id="field-generic-name" placeholder="e.g. Baby Godadi, Bedding, Saree" class="input">
             </div>
 
             <div class="form-group">
-              <label for="field-material">Material / Primary Fabric</label>
-              <input type="text" id="field-material" placeholder="e.g. Pure Cotton, Silk Blend, Rayon" class="input">
+              <label for="field-material">PRIMARY FABRIC / MATERIAL</label>
+              <input type="text" id="field-material" placeholder="e.g. Pure Cotton, Rayon" class="input">
             </div>
 
             <div class="form-group">
-              <label for="field-net-quantity">Net Quantity (N)</label>
-              <input type="text" id="field-net-quantity" placeholder="e.g. Pack of 5, 1, 2" class="input">
+              <label for="field-net-quantity">NET QUANTITY</label>
+              <input type="text" id="field-net-quantity" placeholder="e.g. Pack of 5, 1" class="input">
             </div>
 
             <div class="form-group">
-              <label for="field-pattern">Pattern</label>
-              <input type="text" id="field-pattern" placeholder="e.g. Printed, Solid, Embroidered" class="input">
+              <label for="field-pattern">PATTERN</label>
+              <input type="text" id="field-pattern" placeholder="e.g. Printed, Solid" class="input">
             </div>
 
             <div class="form-group">
-              <label for="field-prod-breadth">Product Breadth</label>
-              <input type="text" id="field-prod-breadth" placeholder="e.g. 50 cm" class="input">
+              <label for="field-prod-length">LENGTH</label>
+              <input type="text" id="field-prod-length" placeholder="e.g. 75" class="input">
             </div>
 
             <div class="form-group">
-              <label for="field-prod-height">Product Height</label>
-              <input type="text" id="field-prod-height" placeholder="e.g. 2 cm" class="input">
+              <label for="field-prod-breadth">BREADTH</label>
+              <input type="text" id="field-prod-breadth" placeholder="e.g. 50" class="input">
             </div>
 
             <div class="form-group">
-              <label for="field-prod-length">Product Length</label>
-              <input type="text" id="field-prod-length" placeholder="e.g. 75 cm" class="input">
+              <label for="field-prod-height">HEIGHT</label>
+              <input type="text" id="field-prod-height" placeholder="e.g. 2" class="input">
             </div>
 
             <div class="form-group">
-              <label for="field-prod-unit">Product Unit</label>
-              <input type="text" id="field-prod-unit" placeholder="e.g. cm or meter" class="input">
+              <label for="field-prod-unit">UNIT</label>
+              <input type="text" id="field-prod-unit" placeholder="e.g. cm" class="input">
             </div>
 
             <div class="form-group grid-col-span-2">
-              <label for="field-description">Product Description <span class="req">*</span></label>
-              <textarea id="field-description" rows="4" class="input textarea" placeholder="Enter complete product description, utility, washing instructions..."></textarea>
+              <label for="field-description">DESCRIPTION <span class="req">*</span></label>
+              <textarea id="field-description" rows="3" class="input textarea" placeholder="Enter complete product description..."></textarea>
             </div>
           </div>
         </section>
 
-        <!-- Section 3: Pricing & Return Tier Details -->
-        <section class="meesho-card">
+        <!-- Section 3: Pricing Commercials -->
+        <section class="voicebox-card">
           <div class="card-header-bar">
-            <h2>Pricing & Return Details</h2>
-            <span class="step-tag">Commercials</span>
+            <div>
+              <h3 class="card-title">COMMERCIALS</h3>
+              <p class="card-desc">Selling tier pricing, return rates, and MRP</p>
+            </div>
+            <span class="card-mono-tag">04 // PRICING</span>
           </div>
           <div class="form-grid-3">
             <div class="form-group">
-              <label for="field-meesho-price">Meesho Price (₹) <span class="req">*</span></label>
-              <input type="number" id="field-meesho-price" placeholder="e.g. 280" class="input">
-              <span class="help-text">Standard all-return selling price</span>
+              <label for="field-meesho-price">MEESHO PRICE (₹) <span class="req">*</span></label>
+              <input type="number" id="field-meesho-price" placeholder="280" class="input">
             </div>
 
             <div class="form-group">
-              <label for="field-wrong-return-price">Wrong Return Price (₹) <span class="req">*</span></label>
-              <input type="number" id="field-wrong-return-price" placeholder="e.g. 279" class="input">
-              <span class="help-text">Defective/wrong return only price</span>
+              <label for="field-wrong-return-price">WRONG RETURN PRICE (₹) <span class="req">*</span></label>
+              <input type="number" id="field-wrong-return-price" placeholder="279" class="input">
             </div>
 
             <div class="form-group">
               <label for="field-mrp">MRP (₹) <span class="req">*</span></label>
-              <input type="number" id="field-mrp" placeholder="e.g. 999" class="input">
-              <span class="help-text">Printed Maximum Retail Price</span>
+              <input type="number" id="field-mrp" placeholder="999" class="input">
             </div>
           </div>
         </section>
 
-        <!-- Section 4: All Dynamically Captured & Additional Fields -->
-        <section class="meesho-card">
+        <!-- Section 4: Dynamically Captured & Custom Fields -->
+        <section class="voicebox-card">
           <div class="card-header-bar">
             <div>
-              <h2>Dynamically Captured & Custom Fields</h2>
-              <p class="section-subtext">All fields captured from the Meesho listing form for this specific category appear here automatically.</p>
+              <h3 class="card-title">CUSTOM & CAPTURED FIELDS</h3>
+              <p class="card-desc">Category-specific attributes detected from catalog forms</p>
             </div>
-            <button id="btn-add-custom-field" class="btn-secondary">＋ Add Custom Field</button>
+            <div class="card-header-action">
+              <button id="btn-add-custom-field" class="btn-secondary">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                <span>ADD FIELD</span>
+              </button>
+            </div>
           </div>
 
           <div id="dynamic-fields-container" class="dynamic-fields-list">
-            <!-- Dynamic captured field cards rendered here -->
+            <!-- Dynamic captured field rows rendered dynamically -->
           </div>
         </section>
 
-        <!-- Section 5: Compliance & Manufacturer Information -->
-        <section class="meesho-card">
+        <!-- Section 5: Compliance & Manufacturer Details -->
+        <section class="voicebox-card">
           <div class="card-header-bar">
-            <h2>Manufacturer, Packer & Compliance</h2>
-            <span class="step-tag">Legal</span>
+            <div>
+              <h3 class="card-title">COMPLIANCE</h3>
+              <p class="card-desc">Statutory declarations and manufacturer details</p>
+            </div>
+            <span class="card-mono-tag">05 // LEGAL</span>
           </div>
           <div class="form-grid-2">
             <div class="form-group">
-              <label for="field-country">Country of Origin</label>
+              <label for="field-country">COUNTRY OF ORIGIN</label>
               <input type="text" id="field-country" value="India" class="input">
             </div>
 
             <div class="form-group">
-              <label for="field-manufacturer">Manufacturer Details</label>
-              <textarea id="field-manufacturer" rows="2" class="input textarea" placeholder="Full name and registered address of manufacturer"></textarea>
+              <label for="field-manufacturer">MANUFACTURER DETAILS</label>
+              <textarea id="field-manufacturer" rows="2" class="input textarea" placeholder="Manufacturer name and registered address"></textarea>
             </div>
 
             <div class="form-group grid-col-span-2">
-              <label for="field-packer">Packer Details</label>
-              <textarea id="field-packer" rows="2" class="input textarea" placeholder="Full name and registered address of packer"></textarea>
+              <label for="field-packer">PACKER DETAILS</label>
+              <textarea id="field-packer" rows="2" class="input textarea" placeholder="Packer name and registered address"></textarea>
             </div>
           </div>
         </section>

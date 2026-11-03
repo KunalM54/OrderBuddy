@@ -1,7 +1,6 @@
 /**
- * OrderBuddy - Docked On-Page Sidebar (No Floating Toggle Tab)
- * Toggled cleanly by clicking the Chrome extension icon or clicking the 'X' button.
- * Zero unwanted floating buttons on the screen!
+ * OrderBuddy - Docked On-Page Sidebar
+ * VoiceBox Editorial Design System
  */
 
 window.MeeshoSidebar = (() => {
@@ -10,7 +9,7 @@ window.MeeshoSidebar = (() => {
   let profilesList = [];
   let currentProfileId = null;
 
-  // Forcefully remove any legacy floating tab or buttons if present in DOM
+  // Purge any legacy floating elements
   function purgeLegacyFloatingElements() {
     document.querySelectorAll(
       "#meesho-sidebar-toggle-tab, #meesho-widget-card, #meesho-widget-header, [id*='toggle-tab'], [class*='toggle-tab']"
@@ -65,61 +64,101 @@ window.MeeshoSidebar = (() => {
     sidebarHost.id = "meesho-autolisting-host";
     sidebarHost.className = "meesho-autolisting-ignore";
 
-    // NO floating toggle tab on the screen!
     sidebarHost.innerHTML = `
       <!-- Main Docked Sidebar -->
       <aside id="meesho-sidebar-panel" class="${isOpen ? "open" : "closed"}">
         <!-- Sidebar Header -->
         <div class="meesho-sb-header">
           <div class="meesho-sb-brand">
-            <span class="brand-title">OrderBuddy</span>
+            <div class="brand-icon-box" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter">
+                <rect x="3" y="3" width="18" height="18"></rect>
+                <line x1="3" y1="9" x2="21" y2="9"></line>
+                <line x1="9" y1="21" x2="9" y2="9"></line>
+              </svg>
+            </div>
+            <div class="brand-text-col">
+              <span class="brand-title">ORDERBUDDY</span>
+              <span class="brand-tag">ASSISTANT // v1.2</span>
+            </div>
           </div>
           <div class="meesho-sb-header-actions">
-            <button id="meesho-sb-btn-manager" class="meesho-header-btn" title="Open Profile Manager">Profile Manager</button>
-            <button id="meesho-sb-close-btn" class="meesho-icon-btn" title="Close Sidebar">✕</button>
+            <button id="meesho-sb-btn-manager" class="meesho-header-btn" title="Open Profile Manager">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter">
+                <path d="M18 13v6H5V8h6"></path>
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <line x1="10" y1="14" x2="21" y2="3"></line>
+              </svg>
+              <span>MANAGER</span>
+            </button>
+            <button id="meesho-sb-close-btn" class="meesho-icon-btn" title="Close Sidebar" aria-label="Close">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
           </div>
         </div>
 
         <!-- Profile Selector Bar -->
         <div class="meesho-sb-profile-bar">
           <div class="profile-select-label-row">
-            <label for="meesho-sb-profile-select">Active Profile:</label>
-            <span id="meesho-sb-profile-count" class="profile-pill">${profilesList.length} Profiles</span>
+            <label for="meesho-sb-profile-select">ACTIVE PROFILE</label>
+            <span id="meesho-sb-profile-count" class="profile-pill">${profilesList.length} PROFILES</span>
           </div>
           <div class="profile-select-row">
             <select id="meesho-sb-profile-select" class="meesho-sb-select">
-              ${profilesList.length === 0 ? `<option value="">No Profiles (Click + New)</option>` : ""}
+              ${profilesList.length === 0 ? `<option value="">NO PROFILES (CLICK + TO CREATE)</option>` : ""}
               ${profilesList.map(p => `
                 <option value="${p.id}" ${p.id === currentProfileId ? "selected" : ""}>
-                  ${escapeHtml(p.name)} (${escapeHtml(p.category || "General")})
+                  ${escapeHtml(p.name.toUpperCase())} (${escapeHtml((p.category || "General").toUpperCase())})
                 </option>
               `).join("")}
             </select>
-            <button id="meesho-sb-btn-new-profile" class="meesho-sb-btn-add" title="Create New Profile">＋</button>
+            <button id="meesho-sb-btn-new-profile" class="meesho-sb-btn-add" title="Create New Profile" aria-label="New Profile">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+            </button>
           </div>
         </div>
 
         <!-- Primary Action Center -->
         <div class="meesho-sb-actions">
           <button id="meesho-sb-btn-autofill" class="meesho-btn-autofill" ${!activeProfile ? "disabled" : ""}>
-            <span class="btn-text">One-Click Autofill Form</span>
+            <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+            <span class="btn-text">AUTOFILL FORM</span>
           </button>
 
-          <button id="meesho-sb-btn-capture" class="meesho-btn-capture" title="Capture all inputs and dropdowns from Meesho form">
-            Auto Capture All Fields
+          <button id="meesho-sb-btn-capture" class="meesho-btn-capture" title="Extract all inputs and dropdowns from page">
+            <svg class="btn-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+              <circle cx="12" cy="13" r="4"></circle>
+            </svg>
+            <span>CAPTURE PAGE FIELDS</span>
           </button>
         </div>
 
         <!-- Live Status Banner -->
         <div id="meesho-sb-status" class="meesho-status-box idle">
-          ${activeProfile ? `Ready to autofill "${escapeHtml(activeProfile.name)}"` : "Click 'Auto Capture' or '＋' to create your profile!"}
+          <span class="status-box-tag">STATUS</span>
+          <span class="status-text">${activeProfile ? `READY FOR "${escapeHtml(activeProfile.name.toUpperCase())}"` : "SELECT OR CREATE A PROFILE TO START"}</span>
         </div>
 
-        <!-- Unified Single-Page Fields Editor (Like Meesho Catalog) -->
+        <!-- Unified Fields Editor -->
         <div class="meesho-sb-fields-container">
           <div class="meesho-sb-section-header">
-            <span>Profile Listing Fields</span>
-            <button id="meesho-sb-add-field-btn" class="meesho-text-link">+ Add Field</button>
+            <span class="header-tag">LISTING ATTRIBUTES</span>
+            <button id="meesho-sb-add-field-btn" class="meesho-text-link">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              <span>ADD FIELD</span>
+            </button>
           </div>
 
           <div id="meesho-sb-fields-list" class="meesho-sb-fields-list">
@@ -130,7 +169,12 @@ window.MeeshoSidebar = (() => {
         <!-- Sidebar Footer -->
         <div class="meesho-sb-footer">
           <button id="meesho-sb-save-fields-btn" class="meesho-btn-save-profile" ${!activeProfile ? "disabled" : ""}>
-            Save Profile Changes
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter">
+              <path d="M19 21H5V5h11l5 5v11z"></path>
+              <polyline points="17 21 17 13 7 13 7 21"></polyline>
+              <polyline points="7 3 7 8 15 8"></polyline>
+            </svg>
+            <span>SAVE PROFILE CHANGES</span>
           </button>
         </div>
       </aside>
@@ -145,17 +189,17 @@ window.MeeshoSidebar = (() => {
     if (entries.length === 0) {
       return `
         <div class="meesho-empty-fields-state">
-          <p>No fields saved in this profile yet.</p>
-          <p class="sub">Open any Meesho listing form and click <strong>"Auto Capture All Fields"</strong> to automatically extract all dropdowns and inputs!</p>
+          <p class="empty-title">NO FIELDS SAVED IN THIS PROFILE</p>
+          <p class="empty-desc">Open a catalog page and click "CAPTURE PAGE FIELDS" to extract attributes.</p>
         </div>
       `;
     }
 
     const sections = {
-      "Product, Size and Inventory": [],
-      "Product Details": [],
-      "Pricing Details": [],
-      "Other Attributes": []
+      "SPECIFICATIONS": [],
+      "ATTRIBUTES": [],
+      "COMMERCIALS": [],
+      "OTHER": []
     };
 
     for (const [key, raw] of entries) {
@@ -167,13 +211,13 @@ window.MeeshoSidebar = (() => {
 
       const l = label.toLowerCase();
       if (l.includes("price") || l.includes("mrp")) {
-        sections["Pricing Details"].push(fieldObj);
+        sections["COMMERCIALS"].push(fieldObj);
       } else if (l.includes("gst") || l.includes("hsn") || l.includes("weight") || l.includes("sku") || l.includes("style") || l.includes("name") || l.includes("size")) {
-        sections["Product, Size and Inventory"].push(fieldObj);
-      } else if (sectionName && sectionName.toLowerCase().includes("product details")) {
-        sections["Product Details"].push(fieldObj);
+        sections["SPECIFICATIONS"].push(fieldObj);
+      } else if (sectionName && (sectionName.toLowerCase().includes("detail") || sectionName.toLowerCase().includes("attribute"))) {
+        sections["ATTRIBUTES"].push(fieldObj);
       } else {
-        sections["Other Attributes"].push(fieldObj);
+        sections["OTHER"].push(fieldObj);
       }
     }
 
@@ -186,10 +230,15 @@ window.MeeshoSidebar = (() => {
           ${list.map(f => `
             <div class="meesho-field-row" data-field-key="${escapeHtml(f.key)}">
               <div class="field-label-wrap">
-                <span class="field-label-text">${escapeHtml(f.label)}</span>
-                <button class="btn-remove-row" title="Remove Field">&times;</button>
+                <span class="field-label-text">${escapeHtml(f.label.toUpperCase())}</span>
+                <button class="btn-remove-row" title="Remove Field" type="button" aria-label="Remove Field">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14H7V6m3 0V4h4v2"></path>
+                  </svg>
+                </button>
               </div>
-              <input type="text" class="field-val-input" value="${escapeHtml(f.val)}" placeholder="Value for ${escapeHtml(f.label)}">
+              <input type="text" class="field-val-input" value="${escapeHtml(f.val)}" placeholder="ENTER ${escapeHtml(f.label.toUpperCase())}">
             </div>
           `).join("")}
         </div>
@@ -239,57 +288,66 @@ window.MeeshoSidebar = (() => {
       currentProfileId = newP.id;
       await chrome.storage.local.set({ profiles: profilesList, activeProfileId: currentProfileId });
       render();
-      setStatus(`Created profile "${newP.name}". Click "Auto Capture" to populate it!`, "success");
+      setStatus(`CREATED PROFILE "${newP.name.toUpperCase()}".`, "success");
     });
 
     // Autofill Now (With 1-Click Stop Feature)
     autofillBtn?.addEventListener("click", async () => {
-      // If autofill is already running, this click STOPS it immediately!
       if (window.MeeshoAutofillEngine.isRunning()) {
-        setStatus("Stopping autofill process...", "warning");
+        setStatus("STOPPING AUTOFILL PROCESS...", "warning");
         window.MeeshoAutofillEngine.stopAutofill();
-        autofillBtn.innerHTML = '<span class="btn-text">Stopping...</span>';
+        autofillBtn.innerHTML = '<span class="btn-text">STOPPING...</span>';
         return;
       }
 
       const profile = getActiveProfile();
       if (!profile) {
-        setStatus("Please create or select a profile first.", "error");
+        setStatus("SELECT OR CREATE A PROFILE FIRST.", "error");
         return;
       }
 
       // Switch button to Stop mode
       autofillBtn.classList.add("btn-stopping");
-      autofillBtn.innerHTML = '<span class="btn-text">Stop Autofill</span>';
-      setStatus("Starting safe autofill...", "info");
+      autofillBtn.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter">
+          <rect x="6" y="6" width="12" height="12"></rect>
+        </svg>
+        <span class="btn-text">STOP AUTOFILL</span>
+      `;
+      setStatus("STARTING AUTOFILL...", "info");
 
       try {
         const result = await window.MeeshoAutofillEngine.autofillAllFields(profile, {
           highlight: true,
           delayMs: 250,
           onProgress: (cur, total, label) => {
-            setStatus(`Filling (${cur}/${total}): ${escapeHtml(label)}...`, "info");
+            setStatus(`FILLING (${cur}/${total}): ${escapeHtml(label.toUpperCase())}...`, "info");
           }
         });
 
         if (result.stopped) {
-          setStatus(`Autofill stopped by user (${result.filledCount} of ${result.totalDetected} fields filled).`, "warning");
+          setStatus(`STOPPED (${result.filledCount} OF ${result.totalDetected} FIELDS FILLED).`, "warning");
         } else if (result.success) {
           if (result.filledCount > 0) {
             const ratio = Math.round((result.filledCount / result.totalDetected) * 100);
-            setStatus(`Filled ${result.filledCount} of ${result.totalDetected} fields (${ratio}% accuracy)! Review & submit manually.`, "success");
+            setStatus(`FILLED ${result.filledCount} OF ${result.totalDetected} FIELDS (${ratio}%).`, "success");
           } else {
-            setStatus("No matching fields could be filled with this profile's data.", "warning");
+            setStatus("NO MATCHING FIELDS FOUND FOR THIS PROFILE.", "warning");
           }
         } else {
-          setStatus(`Error: ${result.error}`, "error");
+          setStatus(`ERROR: ${result.error}`, "error");
         }
       } catch (err) {
-        setStatus(`Error during autofill: ${err.message}`, "error");
+        setStatus(`ERROR DURING AUTOFILL: ${err.message}`, "error");
       } finally {
         // Reset button back to normal
         autofillBtn.classList.remove("btn-stopping");
-        autofillBtn.innerHTML = '<span class="btn-text">One-Click Autofill Form</span>';
+        autofillBtn.innerHTML = `
+          <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+          <span class="btn-text">AUTOFILL FORM</span>
+        `;
       }
     });
 
@@ -298,7 +356,7 @@ window.MeeshoSidebar = (() => {
       let profile = getActiveProfile();
 
       if (!profile) {
-        const name = prompt("Enter profile title for captured product (e.g. Godari):", "Godari");
+        const name = prompt("Enter profile title for captured product:", "Godari");
         if (!name || !name.trim()) return;
 
         profile = {
@@ -313,7 +371,7 @@ window.MeeshoSidebar = (() => {
         currentProfileId = profile.id;
       }
 
-      setStatus("Capturing all inputs and dropdowns from page...", "info");
+      setStatus("CAPTURING FIELDS FROM PAGE...", "info");
       const captureResult = window.MeeshoAutofillEngine.captureAllFields();
 
       if (captureResult.success && captureResult.totalDetected > 0) {
@@ -328,15 +386,15 @@ window.MeeshoSidebar = (() => {
 
         await chrome.storage.local.set({ profiles: profilesList, activeProfileId: profile.id });
         render();
-        setStatus(`Captured ${captureResult.totalDetected} fields (${captureResult.filledCount} filled) into "${profile.name}"!`, "success");
+        setStatus(`CAPTURED ${captureResult.totalDetected} FIELDS INTO "${profile.name.toUpperCase()}".`, "success");
       } else {
-        setStatus("No listing form fields found on this page.", "warning");
+        setStatus("NO LISTING FORM FIELDS FOUND ON THIS PAGE.", "warning");
       }
     });
 
     // Add field inline
     addFieldBtn?.addEventListener("click", () => {
-      const label = prompt("Enter field label (e.g. Care Instructions, Filling Material, Color):");
+      const label = prompt("Enter field label (e.g. Care Instructions, Color):");
       if (!label || !label.trim()) return;
 
       const key = window.MeeshoFieldMapper.labelToKey(label);
@@ -377,7 +435,7 @@ window.MeeshoSidebar = (() => {
       if (idx !== -1) profilesList[idx] = profile;
 
       await chrome.storage.local.set({ profiles: profilesList });
-      setStatus("Profile saved successfully!", "success");
+      setStatus("PROFILE SAVED SUCCESSFULLY.", "success");
     });
 
     // Row remove buttons
@@ -403,12 +461,15 @@ window.MeeshoSidebar = (() => {
     const box = sidebarHost?.querySelector("#meesho-sb-status");
     if (!box) return;
     box.className = `meesho-status-box ${type}`;
-    box.textContent = text;
+    const textEl = box.querySelector(".status-text");
+    if (textEl) {
+      textEl.textContent = text;
+    } else {
+      box.textContent = text;
+    }
   }
 
-  function updateFieldCountBadge() {
-    // Legacy count badge removed from sidebar header as requested
-  }
+  function updateFieldCountBadge() {}
 
   function updateProfiles(newProfiles, newActiveId) {
     profilesList = newProfiles;

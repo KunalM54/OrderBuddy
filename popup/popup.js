@@ -1,6 +1,6 @@
 /**
  * OrderBuddy - Popup Logic
- * Quick launch toolbar and action dispatcher.
+ * VoiceBox Editorial Design System
  */
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -26,13 +26,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   profileSelect?.addEventListener("change", async (e) => {
     activeProfileId = e.target.value;
     await chrome.storage.local.set({ activeProfileId });
-    setStatus("Active profile updated.", "info");
+    setStatus("ACTIVE PROFILE UPDATED.", "info");
   });
 
   // Open / Focus On-Page Sidebar
   btnToggleSidebar?.addEventListener("click", async () => {
     if (!activeTab || !activeTab.id) {
-      setStatus("Please open a Meesho listing tab.", "warning");
+      setStatus("OPEN A CATALOG TAB TO LAUNCH SIDEBAR.", "warning");
       return;
     }
 
@@ -48,7 +48,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
       window.close(); // Close popup so user sees the docked sidebar
     } catch (e) {
-      setStatus("Cannot access tab. Refresh page and try again.", "error");
+      setStatus("CANNOT ACCESS TAB. REFRESH PAGE AND TRY AGAIN.", "error");
     }
   });
 
@@ -70,24 +70,24 @@ document.addEventListener("DOMContentLoaded", async () => {
     activeProfileId = newProfile.id;
     await chrome.storage.local.set({ profiles, activeProfileId });
     renderProfilesDropdown();
-    setStatus(`Created new profile "${newProfile.name}".`, "success");
+    setStatus(`CREATED PROFILE "${newProfile.name.toUpperCase()}".`, "success");
   });
 
   // One-click autofill
   btnAutofill?.addEventListener("click", async () => {
     if (!activeTab || !activeTab.id) {
-      setStatus("No active browser tab found.", "error");
+      setStatus("NO ACTIVE BROWSER TAB FOUND.", "error");
       return;
     }
 
     const currentProfile = getActiveProfile();
     if (!currentProfile) {
-      setStatus("Please create or select a profile first.", "warning");
+      setStatus("SELECT OR CREATE A PROFILE FIRST.", "warning");
       return;
     }
 
     btnAutofill.disabled = true;
-    setStatus("Filling product fields on page...", "info");
+    setStatus("FILLING PRODUCT FIELDS...", "info");
 
     try {
       const response = await chrome.tabs.sendMessage(activeTab.id, {
@@ -99,29 +99,29 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (response && response.success) {
         if (response.filledCount > 0) {
-          setStatus(`Successfully filled ${response.filledCount} fields! Review & submit manually.`, "success");
+          setStatus(`SUCCESSFULLY FILLED ${response.filledCount} FIELDS.`, "success");
         } else {
-          setStatus("No matching listing fields found on this page.", "warning");
+          setStatus("NO MATCHING LISTING FIELDS FOUND ON PAGE.", "warning");
         }
       } else {
-        const errMsg = response?.error || "Could not reach page content. Make sure you are on a Meesho listing tab.";
-        setStatus(`Error: ${errMsg}`, "error");
+        const errMsg = response?.error || "COULD NOT REACH PAGE CONTENT. REFRESH TAB AND RETRY.";
+        setStatus(`ERROR: ${errMsg.toUpperCase()}`, "error");
       }
     } catch (err) {
       btnAutofill.disabled = false;
-      setStatus("Cannot access page. Please refresh the page and try again.", "error");
+      setStatus("CANNOT ACCESS PAGE. PLEASE REFRESH THE PAGE.", "error");
     }
   });
 
   // Capture ALL fields
   btnCapture?.addEventListener("click", async () => {
     if (!activeTab || !activeTab.id) {
-      setStatus("No active browser tab found.", "error");
+      setStatus("NO ACTIVE BROWSER TAB FOUND.", "error");
       return;
     }
 
     btnCapture.disabled = true;
-    setStatus("Capturing all fields from page...", "info");
+    setStatus("CAPTURING FIELDS FROM PAGE...", "info");
 
     try {
       const response = await chrome.tabs.sendMessage(activeTab.id, {
@@ -133,13 +133,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (response && response.success) {
         await loadState();
-        setStatus(`Captured ${response.totalDetected} fields (${response.filledCount} filled) from page!`, "success");
+        setStatus(`CAPTURED ${response.totalDetected} FIELDS (${response.filledCount} FILLED).`, "success");
       } else {
-        setStatus("No form fields detected on page.", "warning");
+        setStatus("NO FORM FIELDS DETECTED ON PAGE.", "warning");
       }
     } catch (err) {
       btnCapture.disabled = false;
-      setStatus("Cannot access page. Please refresh the page.", "error");
+      setStatus("CANNOT ACCESS PAGE. PLEASE REFRESH THE PAGE.", "error");
     }
   });
 
@@ -159,12 +159,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   function renderProfilesDropdown() {
     profileSelect.innerHTML = "";
-    profileCountTag.textContent = `${profiles.length} Profiles`;
+    profileCountTag.textContent = `${profiles.length} PROFILES`;
 
     if (profiles.length === 0) {
       const opt = document.createElement("option");
       opt.value = "";
-      opt.textContent = "No Profiles (Click +)";
+      opt.textContent = "NO PROFILES (CLICK + TO CREATE)";
       profileSelect.appendChild(opt);
       btnAutofill.disabled = true;
       return;
@@ -174,7 +174,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     profiles.forEach(p => {
       const opt = document.createElement("option");
       opt.value = p.id;
-      opt.textContent = `${p.name} (${p.category || "General"})`;
+      opt.textContent = `${p.name.toUpperCase()} (${(p.category || "General").toUpperCase()})`;
       if (p.id === activeProfileId) {
         opt.selected = true;
       }
@@ -192,28 +192,28 @@ document.addEventListener("DOMContentLoaded", async () => {
       activeTab = tab;
 
       if (!tab || !tab.id) {
-        updatePageStatusPill("not-found", "No Tab");
+        updatePageStatusPill("not-found", "NO TAB");
         return;
       }
 
       const res = await chrome.tabs.sendMessage(tab.id, { action: "CHECK_PAGE_STATUS" });
       if (res && res.success) {
         if (res.inputCount > 0) {
-          updatePageStatusPill("ready", `${res.inputCount} Fields Found`);
-          setStatus(`Found ${res.inputCount} listing fields on page. Ready to autofill or capture!`, "success");
+          updatePageStatusPill("ready", `${res.inputCount} FIELDS FOUND`);
+          setStatus(`FOUND ${res.inputCount} FIELDS. READY TO AUTOFILL OR CAPTURE.`, "success");
         } else {
-          updatePageStatusPill("ready", "Page Ready");
+          updatePageStatusPill("ready", "PAGE READY");
         }
       } else {
-        updatePageStatusPill("not-found", "No Form Detected");
+        updatePageStatusPill("not-found", "NO FORM DETECTED");
       }
     } catch (e) {
-      updatePageStatusPill("not-found", "Inactive Page");
+      updatePageStatusPill("not-found", "INACTIVE PAGE");
     }
   }
 
   function updatePageStatusPill(state, text) {
-    pageStatusPill.className = `status-pill ${state}`;
+    pageStatusPill.className = `status-chip ${state}`;
     pageStatusPill.querySelector(".status-text").textContent = text;
   }
 
