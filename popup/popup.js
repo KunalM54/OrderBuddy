@@ -1,5 +1,5 @@
 /**
- * Meesho AutoListing Pro - Popup Logic
+ * OrderBuddy - Popup Logic
  * Quick launch toolbar and action dispatcher.
  */
 
@@ -10,11 +10,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   const btnToggleSidebar = document.getElementById("btn-toggle-page-sidebar");
   const btnAutofill = document.getElementById("btn-autofill");
   const btnCapture = document.getElementById("btn-capture");
-  const btnTrain = document.getElementById("btn-train");
   const statusBanner = document.getElementById("status-banner");
   const pageStatusPill = document.getElementById("page-status-pill");
   const btnOpenOptions = document.getElementById("btn-open-options");
-  const btnOpenSandbox = document.getElementById("btn-open-sandbox");
 
   let profiles = [];
   let activeProfileId = null;
@@ -25,29 +23,26 @@ document.addEventListener("DOMContentLoaded", async () => {
   await checkActiveTabStatus();
 
   // Profile switch
-  profileSelect.addEventListener("change", async (e) => {
+  profileSelect?.addEventListener("change", async (e) => {
     activeProfileId = e.target.value;
     await chrome.storage.local.set({ activeProfileId });
     setStatus("Active profile updated.", "info");
   });
 
   // Open / Focus On-Page Sidebar
-  btnToggleSidebar.addEventListener("click", async () => {
+  btnToggleSidebar?.addEventListener("click", async () => {
     if (!activeTab || !activeTab.id) {
       setStatus("Please open a Meesho listing tab.", "warning");
       return;
     }
 
     try {
-      // Toggle or ensure sidebar is open
       await chrome.scripting.executeScript({
         target: { tabId: activeTab.id },
         func: () => {
-          const tab = document.getElementById("meesho-sidebar-toggle-tab");
           const panel = document.getElementById("meesho-sidebar-panel");
           if (panel) {
             panel.className = "open";
-            if (tab) tab.className = "open";
           }
         }
       });
@@ -58,7 +53,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   // Create new profile
-  btnQuickNew.addEventListener("click", async () => {
+  btnQuickNew?.addEventListener("click", async () => {
     const name = prompt("Enter a name for the new profile (e.g. Godari Baby Set, Sarees):");
     if (!name || !name.trim()) return;
 
@@ -79,7 +74,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   // One-click autofill
-  btnAutofill.addEventListener("click", async () => {
+  btnAutofill?.addEventListener("click", async () => {
     if (!activeTab || !activeTab.id) {
       setStatus("No active browser tab found.", "error");
       return;
@@ -104,9 +99,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (response && response.success) {
         if (response.filledCount > 0) {
-          setStatus(`✓ Successfully filled ${response.filledCount} fields! Review & submit manually.`, "success");
+          setStatus(`Successfully filled ${response.filledCount} fields! Review & submit manually.`, "success");
         } else {
-          setStatus("⚠️ No matching listing fields found on this page.", "warning");
+          setStatus("No matching listing fields found on this page.", "warning");
         }
       } else {
         const errMsg = response?.error || "Could not reach page content. Make sure you are on a Meesho listing tab.";
@@ -119,7 +114,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   // Capture ALL fields
-  btnCapture.addEventListener("click", async () => {
+  btnCapture?.addEventListener("click", async () => {
     if (!activeTab || !activeTab.id) {
       setStatus("No active browser tab found.", "error");
       return;
@@ -138,7 +133,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (response && response.success) {
         await loadState();
-        setStatus(`✓ Captured ${response.totalDetected} fields (${response.filledCount} filled) from page!`, "success");
+        setStatus(`Captured ${response.totalDetected} fields (${response.filledCount} filled) from page!`, "success");
       } else {
         setStatus("No form fields detected on page.", "warning");
       }
@@ -148,33 +143,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // Train Fields
-  btnTrain.addEventListener("click", async () => {
-    if (!activeTab || !activeTab.id) {
-      setStatus("No active browser tab found.", "error");
-      return;
-    }
-
-    try {
-      await chrome.tabs.sendMessage(activeTab.id, {
-        action: "START_FIELD_TRAINING",
-        profileId: activeProfileId
-      });
-      window.close();
-    } catch (err) {
-      setStatus("Cannot activate training on this page. Refresh tab and retry.", "error");
-    }
-  });
-
   // Open Profile Manager
-  btnOpenOptions.addEventListener("click", async () => {
+  btnOpenOptions?.addEventListener("click", async () => {
     await chrome.runtime.openOptionsPage();
-  });
-
-  // Open Sandbox
-  btnOpenSandbox.addEventListener("click", async () => {
-    const sandboxUrl = chrome.runtime.getURL("test-page/meesho-mock-listing.html");
-    await chrome.tabs.create({ url: sandboxUrl });
   });
 
   // Helper functions

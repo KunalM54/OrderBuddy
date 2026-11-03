@@ -1,5 +1,5 @@
 /**
- * Meesho AutoListing Pro - Background Service Worker
+ * OrderBuddy - Background Service Worker
  * Manifest V3 compliant service worker.
  * Pure local operation - zero external network requests.
  * Clicking extension icon directly toggles the on-page sidebar.
@@ -26,7 +26,7 @@ chrome.runtime.onInstalled.addListener(async () => {
     await chrome.storage.local.set({ settings: DEFAULT_SETTINGS });
   }
 
-  console.log("Meesho AutoListing Pro ready - clean state initialized.");
+  console.log("OrderBuddy ready - clean state initialized.");
 });
 
 // Toggle on-page sidebar when extension toolbar icon is clicked
@@ -46,7 +46,6 @@ chrome.action.onClicked.addListener(async (tab) => {
         files: [
           "content/field-mapper.js",
           "content/autofill-engine.js",
-          "content/training-mode.js",
           "content/sidebar-dock.js",
           "content/content.js"
         ]

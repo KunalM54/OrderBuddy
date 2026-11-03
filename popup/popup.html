@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Meesho AutoListing Pro</title>
+  <title>OrderBuddy</title>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
@@ -11,9 +11,8 @@
     <!-- Header -->
     <header class="popup-header">
       <div class="brand">
-        <div class="logo-badge">⚡</div>
         <div class="title-wrap">
-          <h1 class="brand-title">Meesho AutoListing</h1>
+          <h1 class="brand-title">OrderBuddy</h1>
           <span class="brand-sub">Catalog Autofill & Sidebar</span>
         </div>
       </div>
@@ -25,7 +24,6 @@
 
     <!-- Main Sidebar Launch Banner -->
     <button id="btn-toggle-page-sidebar" class="sidebar-launch-btn">
-      <span class="launch-icon">⚡</span>
       <div class="launch-text">
         <span class="launch-title">Open On-Page Sidebar</span>
         <span class="launch-desc">Docked assistant on Meesho page</span>
@@ -50,20 +48,12 @@
     <!-- Main Action Buttons -->
     <section class="section actions-section">
       <button id="btn-autofill" class="btn-primary">
-        <span class="btn-icon">⚡</span>
         <span class="btn-text">One-Click Autofill Form</span>
       </button>
 
-      <div class="action-grid">
-        <button id="btn-capture" class="btn-secondary" title="Capture ALL fields from active Meesho page">
-          <span class="btn-icon">📥</span>
-          <span>Capture All Fields</span>
-        </button>
-        <button id="btn-train" class="btn-secondary" title="Click page fields to train">
-          <span class="btn-icon">🎯</span>
-          <span>Train Fields</span>
-        </button>
-      </div>
+      <button id="btn-capture" class="btn-secondary w-full" title="Capture all fields from active Meesho page">
+        <span>Auto Capture All Fields</span>
+      </button>
     </section>
 
     <!-- Status Message Banner -->
@@ -73,17 +63,13 @@
 
     <!-- Safety / Manual Control Notice -->
     <div class="safety-badge">
-      <span class="shield-icon">🛡️</span>
-      <span>Manual Control: AutoListing will never auto-submit your listing. Always review before publishing.</span>
+      <span>Manual Control: OrderBuddy will never auto-submit your listing. Always review before publishing.</span>
     </div>
 
     <!-- Footer Links -->
     <footer class="popup-footer">
       <button id="btn-open-options" class="footer-btn">
-        <span>⚙️</span> Profile Manager
-      </button>
-      <button id="btn-open-sandbox" class="footer-btn sandbox-btn" title="Open mock listing form to test extension features">
-        <span>🧪</span> Test Sandbox
+        Profile Manager
       </button>
     </footer>
   </div>

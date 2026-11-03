@@ -1,38 +1,37 @@
-# Chrome Web Store Listing — Meesho AutoListing Pro
+# Chrome Web Store Listing — OrderBuddy
 
-> Last Updated: 2026-11-01
+> Last Updated: 2026-11-03
 
 ## Store Listing
 
 **Extension Name**
-Meesho AutoListing Pro - Fast Catalog Autofill
+OrderBuddy - Fast Catalog Autofill
 
 **Short Description**
-Accelerate product listings on the Meesho Supplier Panel with one-click autofill, smart field capture, and multi-category profiles.
+Accelerate product listings on the Meesho Supplier Panel with OrderBuddy one-click autofill, smart field capture, and multi-category profiles.
 
 **Detailed Description**
 Streamline and speed up your product catalog upload workflow on the Meesho Supplier Panel.
 
-Meesho AutoListing Pro eliminates repetitive, manual data entry when uploading single product catalogs on Meesho. With reusable category profiles, instant field detection, and one-click autofill, sellers can cut catalog creation time from minutes to seconds.
+OrderBuddy eliminates repetitive, manual data entry when uploading single product catalogs on Meesho. With reusable category profiles, instant field detection, and one-click autofill, sellers can cut catalog creation time from minutes to seconds.
 
 KEY FEATURES
 - One-Click Form Autofill: Fills all pricing, tax, logistics, attribute, and description fields with a single click.
 - Multi-Category Profiles: Create and manage custom profiles for Sarees, Kurtis, Western Wear, Jewellery, Home Decor, and more.
-- Instant Profile Switching: Switch between saved product categories in real-time from the popup or floating assistant.
+- Instant Profile Switching: Switch between saved product categories in real-time from the popup or on-page sidebar.
 - Auto Capture Existing Listings: Open any existing listing form to automatically extract and save fields into a reusable profile.
-- Visual Field Training Mode: Easily teach the tool new or custom fields simply by clicking on them.
-- In-Page Floating Assistant: Convenient draggable on-page toolbar for fast access without constantly reopening the extension popup.
+- Docked On-Page Sidebar: Clean docked assistant for fast access without obstructing the seller form.
 - Offline Backup & Restore: Export and import your product profiles locally with zero cloud dependencies.
-- 100% Manual Control: AutoListing never automatically submits or publishes your listing. You review and submit every product manually.
+- 100% Manual Control: OrderBuddy never automatically submits or publishes your listing. You review and submit every product manually.
 
 HOW TO USE
-1. Click the AutoListing toolbar icon or use the in-page floating widget on supplier.meesho.com.
+1. Click the OrderBuddy toolbar icon or use the in-page sidebar on supplier.meesho.com.
 2. Select your product profile (or customize one in the Profile Manager).
-3. Click "One-Click Autofill" to populate all matching fields on the catalog page.
+3. Click "One-Click Autofill Form" to populate all matching fields on the catalog page.
 4. Review your product details, upload your images, and manually submit the catalog to Quality Check (QC).
 
 PRIVACY & SECURITY
-Your catalog data never leaves your computer. Meesho AutoListing Pro operates completely offline using local browser storage (`chrome.storage.local`). No analytics, no tracking, and no external server communication.
+Your catalog data never leaves your computer. OrderBuddy operates completely offline using local browser storage (`chrome.storage.local`). No analytics, no tracking, and no external server communication.
 
 SUPPORT & FEEDBACK
 For assistance, profile templates, or feedback, visit our documentation or submit an issue via our developer support channels.
@@ -50,24 +49,24 @@ English
 
 | Asset | Dimensions | Status | Filename |
 |-------|-----------|--------|----------|
-| Store Icon [REQUIRED] | 128×128 PNG | ✅ Ready | icons/icon128.png |
-| Screenshot 1 [REQUIRED] | 1280×800 or 640×400 | ⬜ Not created | screenshots/screen1.png |
-| Screenshot 2 [RECOMMENDED] | 1280×800 or 640×400 | ⬜ Not created | screenshots/screen2.png |
-| Screenshot 3 [RECOMMENDED] | 1280×800 or 640×400 | ⬜ Not created | screenshots/screen3.png |
-| Small Promo Tile [RECOMMENDED] | 440×280 | ⬜ Not created | promo/tile-small.png |
-| Marquee Promo Tile | 1400×560 | ⬜ Not created | promo/tile-marquee.png |
+| Store Icon [REQUIRED] | 128×128 PNG | Ready | icons/icon128.png |
+| Screenshot 1 [REQUIRED] | 1280×800 or 640×400 | Not created | screenshots/screen1.png |
+| Screenshot 2 [RECOMMENDED] | 1280×800 or 640×400 | Not created | screenshots/screen2.png |
+| Screenshot 3 [RECOMMENDED] | 1280×800 or 640×400 | Not created | screenshots/screen3.png |
+| Small Promo Tile [RECOMMENDED] | 440×280 | Not created | promo/tile-small.png |
+| Marquee Promo Tile | 1400×560 | Not created | promo/tile-marquee.png |
 
 ### Screenshot Notes
-- Screenshot 1: In-page floating assistant demonstrating one-click autofill on a Meesho supplier catalog form with green field highlights.
-- Screenshot 2: Chrome extension popup showing the active profile selector, instant snapshot summary, and one-click action buttons.
-- Screenshot 3: Dedicated Full Profile Manager interface showing tabbed editing for Pricing, Attributes, Logistics, and Backup import/export.
+- Screenshot 1: In-page sidebar assistant demonstrating one-click autofill on a Meesho supplier catalog form with green field highlights.
+- Screenshot 2: Chrome extension popup showing the active profile selector and one-click action buttons.
+- Screenshot 3: Dedicated Full Profile Manager interface showing editing for Pricing, Attributes, Logistics, and Backup import/export.
 
 ## Permissions Justification
 
 | Permission | Type | Justification |
 |------------|------|---------------|
-| `storage` | permissions | Required to store and retrieve reusable product listing profiles, settings, and custom field training rules locally on the seller's computer. |
-| `tabs` | permissions | Used to identify the active Meesho supplier catalog tab and coordinate autofill and training actions between the popup and webpage. |
+| `storage` | permissions | Required to store and retrieve reusable product listing profiles, settings, and custom field rules locally on the seller's computer. |
+| `tabs` | permissions | Used to identify the active Meesho supplier catalog tab and coordinate autofill actions between the popup and webpage. |
 | `activeTab` | permissions | Grants the extension temporary access to the currently focused listing tab when the user clicks the extension action icon. |
 | `scripting` | permissions | Enables runtime coordination of field highlighting and form element interaction on supplier listing forms. |
 | `*://supplier.meesho.com/*` | host_permissions | Allows the extension to detect input fields and automate form filling on the official Meesho Supplier panel. |
@@ -104,7 +103,7 @@ The extension does NOT collect, transmit, or share any personal, financial, auth
 ## Privacy Policy
 
 **Privacy Policy URL**
-`https://github.com/meesho-autolisting-pro/privacy-policy` (or seller's hosted repository)
+`https://github.com/orderbuddy/privacy-policy` (or seller's hosted repository)
 
 ## Distribution
 
@@ -113,9 +112,9 @@ The extension does NOT collect, transmit, or share any personal, financial, auth
 
 ## Developer Info
 
-**Publisher Name**: Meesho AutoListing Tools
-**Contact Email**: support@meesho-autolisting.local
-**Support URL / Email**: support@meesho-autolisting.local
+**Publisher Name**: OrderBuddy Tools
+**Contact Email**: support@orderbuddy.local
+**Support URL / Email**: support@orderbuddy.local
 
 ## Version History
 

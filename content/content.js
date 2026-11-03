@@ -1,5 +1,5 @@
 /**
- * Meesho AutoListing Pro - Main Content Script Entrypoint
+ * OrderBuddy - Main Content Script Entrypoint
  * Coordinates on-page docked sidebar, field detection, capture, and autofill.
  */
 
@@ -110,22 +110,6 @@
             break;
           }
 
-          case "START_FIELD_TRAINING": {
-            const data = await chrome.storage.local.get(["profiles", "activeProfileId"]);
-            const profiles = data.profiles || [];
-            const activeId = request.profileId || data.activeProfileId;
-            const profile = profiles.find(p => p.id === activeId) || profiles[0];
-
-            if (!profile) {
-              sendResponse({ success: false, error: "Please create a profile first to train fields." });
-              return;
-            }
-
-            window.MeeshoTrainingMode.startTraining(profile);
-            sendResponse({ success: true });
-            break;
-          }
-
           case "CHECK_PAGE_STATUS": {
             const fields = window.MeeshoFieldMapper.getAllListingFields(document);
             sendResponse({
@@ -142,7 +126,7 @@
             break;
         }
       } catch (err) {
-        console.error("Meesho AutoListing content script error:", err);
+        console.error("OrderBuddy content script error:", err);
         sendResponse({ success: false, error: err.message });
       }
     })();

@@ -1,5 +1,5 @@
 /**
- * Meesho AutoListing Pro - Profile Manager Logic
+ * OrderBuddy - Profile Manager Logic
  * Single-page layout matching Meesho Supplier catalog upload sections.
  * Clean state, zero dummy profiles, and category-agnostic field handling.
  */
@@ -130,7 +130,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Backup Export
   btnExportJson.addEventListener("click", () => {
     const backupData = {
-      version: "1.1.0",
+      version: "1.2.0",
       exportedAt: new Date().toISOString(),
       profiles,
       activeProfileId
@@ -140,7 +140,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `meesho-autolisting-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `orderbuddy-backup-${new Date().toISOString().slice(0, 10)}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -230,7 +230,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           <span class="profile-item-name">${escapeHtml(p.name)}</span>
           <span class="profile-item-sub">${escapeHtml(p.category || "General")}</span>
         </div>
-        ${isActiveDefault ? `<span class="active-star" title="Active Default Profile">⭐</span>` : ""}
+        ${isActiveDefault ? `<span class="profile-pill-badge active" style="font-size:10px; padding:2px 6px;">DEFAULT</span>` : ""}
       `;
 
       li.addEventListener("click", () => {
@@ -334,7 +334,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (editingProfile.id === activeProfileId) {
       activeStatusBadge.style.display = "inline-block";
       activeStatusBadge.className = "profile-pill-badge active";
-      activeStatusBadge.textContent = "⭐ Active Default";
+      activeStatusBadge.textContent = "Active Default";
     } else {
       activeStatusBadge.style.display = "inline-block";
       activeStatusBadge.className = "profile-pill-badge inactive";

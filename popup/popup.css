@@ -1,4 +1,4 @@
-/* Meesho AutoListing Pro - Popup Styles */
+/* OrderBuddy - Popup Styles */
 
 :root {
   --primary: #9e2578;
@@ -61,7 +61,7 @@ body {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 10px 14px;
+  padding: 11px 14px;
   background: linear-gradient(135deg, #1e1b2e 0%, #2d2845 100%);
   color: #ffffff;
   border: 1px solid #4338ca;
@@ -74,18 +74,6 @@ body {
 .sidebar-launch-btn:hover {
   background: linear-gradient(135deg, #2d2845 0%, #3730a3 100%);
   transform: translateY(-1px);
-}
-
-.launch-icon {
-  font-size: 18px;
-  background: rgba(255, 255, 255, 0.15);
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 10px;
 }
 
 .launch-text {
@@ -114,20 +102,7 @@ body {
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
-}
-
-.logo-badge {
-  width: 34px;
-  height: 34px;
-  background: linear-gradient(135deg, var(--primary) 0%, #c026d3 100%);
-  color: #ffffff;
-  border-radius: var(--radius);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  box-shadow: 0 2px 4px rgba(158, 37, 120, 0.25);
+  gap: 8px;
 }
 
 .title-wrap {
@@ -136,14 +111,14 @@ body {
 }
 
 .brand-title {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--gray-900);
   line-height: 1.2;
 }
 
 .brand-sub {
-  font-size: 10px;
+  font-size: 10.5px;
   color: var(--gray-600);
   font-weight: 500;
 }
@@ -304,23 +279,16 @@ body {
   box-shadow: none;
 }
 
-.action-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
 .btn-secondary {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
   background: var(--gray-100);
-  border: 1px solid var(--gray-200);
+  border: 1px solid var(--gray-300);
   color: var(--gray-700);
   border-radius: var(--radius);
-  padding: 8px 10px;
-  font-size: 12px;
+  padding: 9px 12px;
+  font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -331,66 +299,8 @@ body {
   color: var(--gray-900);
 }
 
-/* Snapshot Grid */
-.summary-section {
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius);
-  padding: 10px;
-  background: var(--gray-50);
-}
-
-.section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-
-.link-btn {
-  background: none;
-  border: none;
-  color: var(--primary);
-  font-size: 11px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.link-btn:hover {
-  text-decoration: underline;
-}
-
-.snapshot-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
-}
-
-.snapshot-card {
-  background: #ffffff;
-  border: 1px solid var(--gray-200);
-  border-radius: 6px;
-  padding: 6px 8px;
-  display: flex;
-  flex-direction: column;
-}
-
-.card-label {
-  font-size: 10px;
-  color: var(--gray-600);
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.card-value {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--gray-900);
-  margin-top: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.btn-secondary.w-full {
+  width: 100%;
 }
 
 /* Status Banner */
@@ -437,7 +347,6 @@ body {
 .safety-badge {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
   background: #f0fdf4;
   border: 1px solid #bbf7d0;
   border-radius: var(--radius);
@@ -445,11 +354,6 @@ body {
   font-size: 10.5px;
   color: #166534;
   line-height: 1.35;
-}
-
-.shield-icon {
-  font-size: 13px;
-  flex-shrink: 0;
 }
 
 /* Footer */
@@ -465,15 +369,14 @@ body {
   background: #ffffff;
   border: 1px solid var(--gray-300);
   border-radius: var(--radius);
-  padding: 8px 10px;
-  font-size: 11px;
+  padding: 9px 12px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--gray-700);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
   transition: all 0.15s ease;
 }
 
@@ -481,15 +384,4 @@ body {
   background: var(--gray-50);
   border-color: var(--gray-400);
   color: var(--gray-900);
-}
-
-.sandbox-btn {
-  background: #fdf4ff;
-  border-color: #f0abfc;
-  color: #86198f;
-}
-
-.sandbox-btn:hover {
-  background: #fae8ff;
-  color: #701a75;
 }

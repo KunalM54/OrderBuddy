@@ -1,5 +1,5 @@
 /**
- * Meesho AutoListing Pro - 100% Accurate & Safe Dropdown & Form Autofill Engine
+ * OrderBuddy - 100% Accurate & Safe Dropdown & Form Autofill Engine
  * Reverse-engineered for Meesho's React / Ant Design / rc-select dynamic forms.
  *
  * Strict Safety Guarantees:

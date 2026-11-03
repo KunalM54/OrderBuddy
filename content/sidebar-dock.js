@@ -1,5 +1,5 @@
 /**
- * Meesho AutoListing Pro - Docked On-Page Sidebar (No Floating Toggle Tab)
+ * OrderBuddy - Docked On-Page Sidebar (No Floating Toggle Tab)
  * Toggled cleanly by clicking the Chrome extension icon or clicking the 'X' button.
  * Zero unwanted floating buttons on the screen!
  */
@@ -24,7 +24,6 @@ window.MeeshoSidebar = (() => {
     currentProfileId = data.activeProfileId || (profilesList[0] ? profilesList[0].id : null);
 
     render();
-    updateFieldCountBadge();
   }
 
   function getActiveProfile() {
@@ -73,13 +72,12 @@ window.MeeshoSidebar = (() => {
         <!-- Sidebar Header -->
         <div class="meesho-sb-header">
           <div class="meesho-sb-brand">
-            <span class="brand-bolt">⚡</span>
-            <div>
-              <div class="brand-title">Meesho AutoListing</div>
-              <div id="meesho-sb-detected-badge" class="brand-sub">Scanning page...</div>
-            </div>
+            <span class="brand-title">OrderBuddy</span>
           </div>
-          <button id="meesho-sb-close-btn" class="meesho-icon-btn" title="Close Sidebar (✕)">✕</button>
+          <div class="meesho-sb-header-actions">
+            <button id="meesho-sb-btn-manager" class="meesho-header-btn" title="Open Profile Manager">Profile Manager</button>
+            <button id="meesho-sb-close-btn" class="meesho-icon-btn" title="Close Sidebar">✕</button>
+          </div>
         </div>
 
         <!-- Profile Selector Bar -->
@@ -104,18 +102,12 @@ window.MeeshoSidebar = (() => {
         <!-- Primary Action Center -->
         <div class="meesho-sb-actions">
           <button id="meesho-sb-btn-autofill" class="meesho-btn-autofill" ${!activeProfile ? "disabled" : ""}>
-            <span class="btn-icon">⚡</span>
             <span class="btn-text">One-Click Autofill Form</span>
           </button>
 
-          <div class="meesho-action-subgrid">
-            <button id="meesho-sb-btn-capture" class="meesho-sub-btn" title="Capture ALL inputs & dropdowns from Meesho form">
-              📥 Auto Capture All Fields
-            </button>
-            <button id="meesho-sb-btn-train" class="meesho-sub-btn" title="Click on fields to map them">
-              🎯 Train Fields
-            </button>
-          </div>
+          <button id="meesho-sb-btn-capture" class="meesho-btn-capture" title="Capture all inputs and dropdowns from Meesho form">
+            Auto Capture All Fields
+          </button>
         </div>
 
         <!-- Live Status Banner -->
@@ -138,13 +130,8 @@ window.MeeshoSidebar = (() => {
         <!-- Sidebar Footer -->
         <div class="meesho-sb-footer">
           <button id="meesho-sb-save-fields-btn" class="meesho-btn-save-profile" ${!activeProfile ? "disabled" : ""}>
-            💾 Save Profile Changes
+            Save Profile Changes
           </button>
-          <div class="meesho-sb-footer-links">
-            <button id="meesho-sb-btn-manager" class="footer-link">⚙️ Profile Manager</button>
-            <button id="meesho-sb-btn-sandbox" class="footer-link" style="color:#9e2578;">🧪 Test Sandbox</button>
-            <span class="footer-shield" title="Manual Control: You must review and submit manually.">🛡️ Manual</span>
-          </div>
         </div>
       </aside>
     `;
@@ -159,7 +146,7 @@ window.MeeshoSidebar = (() => {
       return `
         <div class="meesho-empty-fields-state">
           <p>No fields saved in this profile yet.</p>
-          <p class="sub">Open any Meesho listing form and click <strong>"📥 Auto Capture All Fields"</strong> to automatically extract all dropdowns and inputs!</p>
+          <p class="sub">Open any Meesho listing form and click <strong>"Auto Capture All Fields"</strong> to automatically extract all dropdowns and inputs!</p>
         </div>
       `;
     }
@@ -218,26 +205,24 @@ window.MeeshoSidebar = (() => {
     const newProfileBtn = sidebarHost.querySelector("#meesho-sb-btn-new-profile");
     const autofillBtn = sidebarHost.querySelector("#meesho-sb-btn-autofill");
     const captureBtn = sidebarHost.querySelector("#meesho-sb-btn-capture");
-    const trainBtn = sidebarHost.querySelector("#meesho-sb-btn-train");
     const saveFieldsBtn = sidebarHost.querySelector("#meesho-sb-save-fields-btn");
     const addFieldBtn = sidebarHost.querySelector("#meesho-sb-add-field-btn");
     const managerBtn = sidebarHost.querySelector("#meesho-sb-btn-manager");
-    const sandboxBtn = sidebarHost.querySelector("#meesho-sb-btn-sandbox");
 
     // Close button
-    closeBtn.addEventListener("click", () => {
+    closeBtn?.addEventListener("click", () => {
       close();
     });
 
     // Profile switch
-    profileSelect.addEventListener("change", async (e) => {
+    profileSelect?.addEventListener("change", async (e) => {
       currentProfileId = e.target.value;
       await chrome.storage.local.set({ activeProfileId: currentProfileId });
       render();
     });
 
     // Create New Profile
-    newProfileBtn.addEventListener("click", async () => {
+    newProfileBtn?.addEventListener("click", async () => {
       const name = prompt("Enter a name for the new profile (e.g. Godari Baby Set, Sarees):");
       if (!name || !name.trim()) return;
 
@@ -258,12 +243,12 @@ window.MeeshoSidebar = (() => {
     });
 
     // Autofill Now (With 1-Click Stop Feature)
-    autofillBtn.addEventListener("click", async () => {
+    autofillBtn?.addEventListener("click", async () => {
       // If autofill is already running, this click STOPS it immediately!
       if (window.MeeshoAutofillEngine.isRunning()) {
         setStatus("Stopping autofill process...", "warning");
         window.MeeshoAutofillEngine.stopAutofill();
-        autofillBtn.innerHTML = '<span class="btn-icon">⏳</span><span class="btn-text">Stopping...</span>';
+        autofillBtn.innerHTML = '<span class="btn-text">Stopping...</span>';
         return;
       }
 
@@ -275,7 +260,7 @@ window.MeeshoSidebar = (() => {
 
       // Switch button to Stop mode
       autofillBtn.classList.add("btn-stopping");
-      autofillBtn.innerHTML = '<span class="btn-icon">⏹</span><span class="btn-text">Stop Autofill</span>';
+      autofillBtn.innerHTML = '<span class="btn-text">Stop Autofill</span>';
       setStatus("Starting safe autofill...", "info");
 
       try {
@@ -288,13 +273,13 @@ window.MeeshoSidebar = (() => {
         });
 
         if (result.stopped) {
-          setStatus(`⏹ Autofill stopped by user (${result.filledCount} of ${result.totalDetected} fields filled).`, "warning");
+          setStatus(`Autofill stopped by user (${result.filledCount} of ${result.totalDetected} fields filled).`, "warning");
         } else if (result.success) {
           if (result.filledCount > 0) {
             const ratio = Math.round((result.filledCount / result.totalDetected) * 100);
-            setStatus(`✓ Filled ${result.filledCount} of ${result.totalDetected} fields (${ratio}% accuracy)! Review & submit manually.`, "success");
+            setStatus(`Filled ${result.filledCount} of ${result.totalDetected} fields (${ratio}% accuracy)! Review & submit manually.`, "success");
           } else {
-            setStatus("⚠️ No matching fields could be filled with this profile's data.", "warning");
+            setStatus("No matching fields could be filled with this profile's data.", "warning");
           }
         } else {
           setStatus(`Error: ${result.error}`, "error");
@@ -304,12 +289,12 @@ window.MeeshoSidebar = (() => {
       } finally {
         // Reset button back to normal
         autofillBtn.classList.remove("btn-stopping");
-        autofillBtn.innerHTML = '<span class="btn-icon">⚡</span><span class="btn-text">One-Click Autofill Form</span>';
+        autofillBtn.innerHTML = '<span class="btn-text">One-Click Autofill Form</span>';
       }
     });
 
     // Auto Capture ALL Fields
-    captureBtn.addEventListener("click", async () => {
+    captureBtn?.addEventListener("click", async () => {
       let profile = getActiveProfile();
 
       if (!profile) {
@@ -343,24 +328,14 @@ window.MeeshoSidebar = (() => {
 
         await chrome.storage.local.set({ profiles: profilesList, activeProfileId: profile.id });
         render();
-        setStatus(`✓ Captured ${captureResult.totalDetected} fields (${captureResult.filledCount} filled) into "${profile.name}"!`, "success");
+        setStatus(`Captured ${captureResult.totalDetected} fields (${captureResult.filledCount} filled) into "${profile.name}"!`, "success");
       } else {
         setStatus("No listing form fields found on this page.", "warning");
       }
     });
 
-    // Train Fields
-    trainBtn.addEventListener("click", () => {
-      const profile = getActiveProfile();
-      if (!profile) {
-        setStatus("Select or create a profile first to train fields.", "warning");
-        return;
-      }
-      window.MeeshoTrainingMode.startTraining(profile);
-    });
-
     // Add field inline
-    addFieldBtn.addEventListener("click", () => {
+    addFieldBtn?.addEventListener("click", () => {
       const label = prompt("Enter field label (e.g. Care Instructions, Filling Material, Color):");
       if (!label || !label.trim()) return;
 
@@ -380,7 +355,7 @@ window.MeeshoSidebar = (() => {
     });
 
     // Save Profile Changes from inline editor
-    saveFieldsBtn.addEventListener("click", async () => {
+    saveFieldsBtn?.addEventListener("click", async () => {
       const profile = getActiveProfile();
       if (!profile) return;
 
@@ -402,14 +377,14 @@ window.MeeshoSidebar = (() => {
       if (idx !== -1) profilesList[idx] = profile;
 
       await chrome.storage.local.set({ profiles: profilesList });
-      setStatus("✓ Profile saved successfully!", "success");
+      setStatus("Profile saved successfully!", "success");
     });
 
     // Row remove buttons
     sidebarHost.querySelectorAll(".btn-remove-row").forEach(btn => {
       btn.addEventListener("click", (e) => {
         const row = e.target.closest(".meesho-field-row");
-        const key = row.getAttribute("data-field-key");
+        const key = row?.getAttribute("data-field-key");
         const profile = getActiveProfile();
         if (profile && profile.fields && key) {
           delete profile.fields[key];
@@ -419,14 +394,8 @@ window.MeeshoSidebar = (() => {
     });
 
     // Full Profile Manager
-    managerBtn.addEventListener("click", () => {
+    managerBtn?.addEventListener("click", () => {
       chrome.runtime.sendMessage({ type: "OPEN_OPTIONS_PAGE" });
-    });
-
-    // Test Sandbox
-    sandboxBtn.addEventListener("click", () => {
-      const sandboxUrl = chrome.runtime.getURL("test-page/meesho-mock-listing.html");
-      window.open(sandboxUrl, "_blank");
     });
   }
 
@@ -438,18 +407,13 @@ window.MeeshoSidebar = (() => {
   }
 
   function updateFieldCountBadge() {
-    const fields = window.MeeshoFieldMapper.getAllListingFields(document);
-    const badge = sidebarHost?.querySelector("#meesho-sb-detected-badge");
-    if (badge) {
-      badge.textContent = `${fields.length} Fields Detected on Page`;
-    }
+    // Legacy count badge removed from sidebar header as requested
   }
 
   function updateProfiles(newProfiles, newActiveId) {
     profilesList = newProfiles;
     if (newActiveId) currentProfileId = newActiveId;
     render();
-    updateFieldCountBadge();
   }
 
   function escapeHtml(str) {

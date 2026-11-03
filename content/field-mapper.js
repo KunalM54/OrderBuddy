@@ -1,5 +1,5 @@
 /**
- * Meesho AutoListing Pro - Universal Dynamic Field Mapper
+ * OrderBuddy - Universal Dynamic Field Mapper
  * Category-agnostic field detection and label extraction.
  * Dynamically discovers ALL standard inputs, textareas, selects,
  * and custom React/AntD/Meesho design system dropdowns across ANY category.
