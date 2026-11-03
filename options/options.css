@@ -242,9 +242,21 @@ body {
 }
 
 .profile-item.active {
-  background-color: var(--bg-surface);
+  background-color: var(--color-primary);
   border-left: 4px solid var(--color-secondary);
-  border-bottom: 2px solid var(--border-strong);
+  border-bottom: 1px solid #262626;
+}
+
+.profile-item.active:hover {
+  background-color: #171717;
+}
+
+.profile-item.active .profile-item-name {
+  color: #FFFFFF;
+}
+
+.profile-item.active .profile-item-sub {
+  color: rgba(255, 255, 255, 0.65);
 }
 
 .profile-info {
@@ -338,6 +350,10 @@ body {
   gap: 12px;
 }
 
+#active-status-badge {
+  display: none !important;
+}
+
 .title-heading {
   font-family: var(--font-display);
   font-size: 28px;
@@ -429,6 +445,36 @@ body {
 .btn-secondary:hover {
   background: var(--color-primary);
   color: var(--color-tertiary);
+}
+
+.btn-default-dark {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--color-primary);
+  border: 2px solid var(--border-strong);
+  color: var(--color-tertiary);
+  border-radius: 0px;
+  padding: 10px 18px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-default-dark:hover {
+  background: var(--color-secondary);
+  border-color: var(--color-secondary);
+  color: var(--color-tertiary);
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed !important;
+  pointer-events: none;
 }
 
 .btn-destructive {

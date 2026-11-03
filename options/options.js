@@ -97,14 +97,25 @@ document.addEventListener("DOMContentLoaded", async () => {
     showToast("PROFILE DELETED.");
   });
 
-  // Set as Default Active Profile
+  // Set / Toggle Default Active Profile (Enable / Disable)
   btnSetDefault.addEventListener("click", () => {
     if (!editingProfile) return;
-    activeProfileId = editingProfile.id;
-    saveToStorage();
-    renderSidebarList();
-    updateHeaderStatus();
-    showToast(`"${editingProfile.name.toUpperCase()}" IS NOW ACTIVE DEFAULT.`);
+
+    if (activeProfileId === editingProfile.id) {
+      // Toggle disable default
+      activeProfileId = null;
+      saveToStorage();
+      renderSidebarList();
+      updateHeaderStatus();
+      showToast(`DEFAULT DISABLED FOR "${editingProfile.name.toUpperCase()}".`);
+    } else {
+      // Enable as default
+      activeProfileId = editingProfile.id;
+      saveToStorage();
+      renderSidebarList();
+      updateHeaderStatus();
+      showToast(`"${editingProfile.name.toUpperCase()}" IS NOW ACTIVE DEFAULT.`);
+    }
   });
 
   // Save changes from single-page form
@@ -236,7 +247,6 @@ document.addEventListener("DOMContentLoaded", async () => {
           <span class="profile-item-name">${escapeHtml(p.name)}</span>
           <span class="profile-item-sub">${escapeHtml((p.category || "General").toUpperCase())}</span>
         </div>
-        ${isActiveDefault ? `<span class="status-chip active" style="font-size:10px; padding:2px 6px;">DEFAULT</span>` : ""}
       `;
 
       li.addEventListener("click", () => {
@@ -331,18 +341,40 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   function updateHeaderStatus() {
+    activeStatusBadge.style.display = "none";
+
     if (!editingProfile) {
-      activeStatusBadge.style.display = "none";
+      btnSetDefault.disabled = true;
+      btnDuplicate.disabled = true;
+      btnDelete.disabled = true;
+      btnSave.disabled = true;
       return;
     }
-    if (editingProfile.id === activeProfileId) {
-      activeStatusBadge.style.display = "inline-block";
-      activeStatusBadge.className = "status-chip active";
-      activeStatusBadge.textContent = "DEFAULT";
+
+    btnSetDefault.disabled = false;
+    btnDuplicate.disabled = false;
+    btnDelete.disabled = false;
+    btnSave.disabled = false;
+
+    const isDefault = (editingProfile.id === activeProfileId);
+    if (isDefault) {
+      btnSetDefault.className = "btn-default-dark";
+      btnSetDefault.innerHTML = `
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+        </svg>
+        <span>DEFAULT</span>
+      `;
+      btnSetDefault.title = "Default profile is active (click to disable)";
     } else {
-      activeStatusBadge.style.display = "inline-block";
-      activeStatusBadge.className = "status-chip inactive";
-      activeStatusBadge.textContent = "INACTIVE";
+      btnSetDefault.className = "btn-secondary";
+      btnSetDefault.innerHTML = `
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+        </svg>
+        <span>SET DEFAULT</span>
+      `;
+      btnSetDefault.title = "Click to enable as default profile";
     }
   }
 
