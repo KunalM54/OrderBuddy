@@ -1,6 +1,6 @@
 /**
  * OrderBuddy - Popup Logic
- * VoiceBox Editorial Design System
+ * Design System: Skylearn (Friendly, accessible, clean UI)
  */
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -26,13 +26,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   profileSelect?.addEventListener("change", async (e) => {
     activeProfileId = e.target.value;
     await chrome.storage.local.set({ activeProfileId });
-    setStatus("ACTIVE PROFILE UPDATED.", "info");
+    setStatus("Active profile updated.", "info");
   });
 
   // Open / Focus On-Page Sidebar
   btnToggleSidebar?.addEventListener("click", async () => {
     if (!activeTab || !activeTab.id) {
-      setStatus("OPEN A CATALOG TAB TO LAUNCH SIDEBAR.", "warning");
+      setStatus("Open a catalog tab to launch the sidebar.", "warning");
       return;
     }
 
@@ -48,13 +48,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
       window.close(); // Close popup so user sees the docked sidebar
     } catch (e) {
-      setStatus("CANNOT ACCESS TAB. REFRESH PAGE AND TRY AGAIN.", "error");
+      setStatus("Cannot access tab. Refresh page and try again.", "error");
     }
   });
 
   // Create new profile
   btnQuickNew?.addEventListener("click", async () => {
-    const name = prompt("Enter a name for the new profile (e.g. Godari Baby Set, Sarees):");
+    const name = prompt("Enter a name for the new profile (e.g. Baby Godadi, Sarees):");
     if (!name || !name.trim()) return;
 
     const newProfile = {
@@ -70,24 +70,24 @@ document.addEventListener("DOMContentLoaded", async () => {
     activeProfileId = newProfile.id;
     await chrome.storage.local.set({ profiles, activeProfileId });
     renderProfilesDropdown();
-    setStatus(`CREATED PROFILE "${newProfile.name.toUpperCase()}".`, "success");
+    setStatus(`Created profile "${newProfile.name}".`, "success");
   });
 
   // One-click autofill
   btnAutofill?.addEventListener("click", async () => {
     if (!activeTab || !activeTab.id) {
-      setStatus("NO ACTIVE BROWSER TAB FOUND.", "error");
+      setStatus("No active browser tab found.", "error");
       return;
     }
 
     const currentProfile = getActiveProfile();
     if (!currentProfile) {
-      setStatus("SELECT OR CREATE A PROFILE FIRST.", "warning");
+      setStatus("Select or create a profile first.", "warning");
       return;
     }
 
     btnAutofill.disabled = true;
-    setStatus("FILLING PRODUCT FIELDS...", "info");
+    setStatus("Filling product fields...", "info");
 
     try {
       const response = await chrome.tabs.sendMessage(activeTab.id, {
@@ -99,29 +99,29 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (response && response.success) {
         if (response.filledCount > 0) {
-          setStatus(`SUCCESSFULLY FILLED ${response.filledCount} FIELDS.`, "success");
+          setStatus(`Successfully filled ${response.filledCount} fields.`, "success");
         } else {
-          setStatus("NO MATCHING LISTING FIELDS FOUND ON PAGE.", "warning");
+          setStatus("No matching listing fields found on page.", "warning");
         }
       } else {
-        const errMsg = response?.error || "COULD NOT REACH PAGE CONTENT. REFRESH TAB AND RETRY.";
-        setStatus(`ERROR: ${errMsg.toUpperCase()}`, "error");
+        const errMsg = response?.error || "Could not reach page content. Refresh tab and retry.";
+        setStatus(`Error: ${errMsg}`, "error");
       }
     } catch (err) {
       btnAutofill.disabled = false;
-      setStatus("CANNOT ACCESS PAGE. PLEASE REFRESH THE PAGE.", "error");
+      setStatus("Cannot access page. Please refresh the page.", "error");
     }
   });
 
   // Capture ALL fields
   btnCapture?.addEventListener("click", async () => {
     if (!activeTab || !activeTab.id) {
-      setStatus("NO ACTIVE BROWSER TAB FOUND.", "error");
+      setStatus("No active browser tab found.", "error");
       return;
     }
 
     btnCapture.disabled = true;
-    setStatus("CAPTURING FIELDS FROM PAGE...", "info");
+    setStatus("Capturing fields from page...", "info");
 
     try {
       const response = await chrome.tabs.sendMessage(activeTab.id, {
@@ -133,13 +133,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (response && response.success) {
         await loadState();
-        setStatus(`CAPTURED ${response.totalDetected} FIELDS (${response.filledCount} FILLED).`, "success");
+        setStatus(`Captured ${response.totalDetected} fields (${response.filledCount} filled).`, "success");
       } else {
-        setStatus("NO FORM FIELDS DETECTED ON PAGE.", "warning");
+        setStatus("No form fields detected on page.", "warning");
       }
     } catch (err) {
       btnCapture.disabled = false;
-      setStatus("CANNOT ACCESS PAGE. PLEASE REFRESH THE PAGE.", "error");
+      setStatus("Cannot access page. Please refresh the page.", "error");
     }
   });
 
@@ -159,12 +159,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   function renderProfilesDropdown() {
     profileSelect.innerHTML = "";
-    profileCountTag.textContent = `${profiles.length} PROFILES`;
+    profileCountTag.textContent = `${profiles.length} ${profiles.length === 1 ? "Profile" : "Profiles"}`;
 
     if (profiles.length === 0) {
       const opt = document.createElement("option");
       opt.value = "";
-      opt.textContent = "NO PROFILES (CLICK + TO CREATE)";
+      opt.textContent = "No profiles yet (click + to create)";
       profileSelect.appendChild(opt);
       btnAutofill.disabled = true;
       return;
@@ -174,7 +174,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     profiles.forEach(p => {
       const opt = document.createElement("option");
       opt.value = p.id;
-      opt.textContent = `${p.name.toUpperCase()} (${(p.category || "General").toUpperCase()})`;
+      opt.textContent = `${p.name} (${p.category || "General"})`;
       if (p.id === activeProfileId) {
         opt.selected = true;
       }
@@ -192,23 +192,23 @@ document.addEventListener("DOMContentLoaded", async () => {
       activeTab = tab;
 
       if (!tab || !tab.id) {
-        updatePageStatusPill("not-found", "NO TAB");
+        updatePageStatusPill("not-found", "No Tab");
         return;
       }
 
       const res = await chrome.tabs.sendMessage(tab.id, { action: "CHECK_PAGE_STATUS" });
       if (res && res.success) {
         if (res.inputCount > 0) {
-          updatePageStatusPill("ready", `${res.inputCount} FIELDS FOUND`);
-          setStatus(`FOUND ${res.inputCount} FIELDS. READY TO AUTOFILL OR CAPTURE.`, "success");
+          updatePageStatusPill("ready", `${res.inputCount} Fields Found`);
+          setStatus(`Found ${res.inputCount} catalog fields ready.`, "success");
         } else {
-          updatePageStatusPill("ready", "PAGE READY");
+          updatePageStatusPill("ready", "Ready");
         }
       } else {
-        updatePageStatusPill("not-found", "NO FORM DETECTED");
+        updatePageStatusPill("not-found", "No Form Detected");
       }
     } catch (e) {
-      updatePageStatusPill("not-found", "INACTIVE PAGE");
+      updatePageStatusPill("not-found", "Inactive Tab");
     }
   }
 

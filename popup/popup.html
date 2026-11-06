@@ -6,7 +6,7 @@
   <title>OrderBuddy</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&family=Nunito:wght@600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
@@ -18,23 +18,30 @@
           <img src="../icons/logo.png" alt="OrderBuddy Logo" class="brand-logo-img">
         </div>
         <div class="title-wrap">
-          <h1 class="brand-title">ORDERBUDDY</h1>
-          <span class="brand-sub">CATALOG ASSISTANT</span>
+          <h1 class="brand-title">OrderBuddy</h1>
+          <span class="brand-sub">Catalog Assistant</span>
         </div>
       </div>
       <div id="page-status-pill" class="status-chip checking">
-        <span class="status-text">SCANNING</span>
+        <span class="status-dot"></span>
+        <span class="status-text">Scanning</span>
       </div>
     </header>
 
-    <!-- Main Sidebar Launch Banner -->
+    <!-- Main Sidebar Launch Card -->
     <button id="btn-toggle-page-sidebar" class="sidebar-launch-btn">
+      <div class="launch-icon-wrap" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="4"></rect>
+          <line x1="15" y1="3" x2="15" y2="21"></line>
+        </svg>
+      </div>
       <div class="launch-text">
-        <span class="launch-title">OPEN ON-PAGE SIDEBAR</span>
-        <span class="launch-desc">DOCKED SIDECAR ON CATALOG PAGE</span>
+        <span class="launch-title">Open On-Page Sidebar</span>
+        <span class="launch-desc">Full attributes docked drawer on catalog tab</span>
       </div>
       <div class="launch-arrow" aria-hidden="true">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="9 18 15 12 9 6"></polyline>
         </svg>
       </div>
@@ -43,15 +50,15 @@
     <!-- Profile Selector -->
     <section class="section profile-selector-section">
       <div class="section-label-row">
-        <label for="profile-select" class="section-label">ACTIVE PROFILE</label>
-        <span id="profile-count-tag" class="count-tag">0 PROFILES</span>
+        <label for="profile-select" class="section-label">Active Profile</label>
+        <span id="profile-count-tag" class="count-tag">0 Profiles</span>
       </div>
       <div class="select-row">
         <select id="profile-select" class="custom-select">
           <!-- Populated dynamically -->
         </select>
         <button id="btn-quick-new" class="icon-btn" title="Create New Profile" aria-label="Create New Profile">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="12" y1="5" x2="12" y2="19"></line>
             <line x1="5" y1="12" x2="19" y2="12"></line>
           </svg>
@@ -62,35 +69,35 @@
     <!-- Main Action Buttons -->
     <section class="section actions-section">
       <button id="btn-autofill" class="btn-primary">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="square" stroke-linejoin="miter">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
         </svg>
-        <span class="btn-text">AUTOFILL FORM</span>
+        <span class="btn-text">Autofill Form</span>
       </button>
 
       <button id="btn-capture" class="btn-secondary" title="Capture all fields from page">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
           <circle cx="12" cy="13" r="4"></circle>
         </svg>
-        <span>CAPTURE PAGE FIELDS</span>
+        <span>Capture Page Fields</span>
       </button>
     </section>
 
     <!-- Status Message Banner -->
     <div id="status-banner" class="status-banner idle">
-      READY TO POPULATE LISTING ATTRIBUTES
+      Ready to populate listing attributes
     </div>
 
     <!-- Footer Links -->
     <footer class="popup-footer">
       <button id="btn-open-options" class="footer-btn">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter">
-          <path d="M18 13v6H5V8h6"></path>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
           <polyline points="15 3 21 3 21 9"></polyline>
           <line x1="10" y1="14" x2="21" y2="3"></line>
         </svg>
-        <span>PROFILE MANAGER</span>
+        <span>Profile Manager</span>
       </button>
     </footer>
   </div>

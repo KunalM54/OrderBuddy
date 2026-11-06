@@ -1,6 +1,6 @@
 /**
  * OrderBuddy - Profile Manager Logic
- * VoiceBox Editorial Design System
+ * Design System: Skylearn (Friendly, accessible, clean UI)
  */
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Create new profile
   btnCreateProfile.addEventListener("click", () => {
-    const name = prompt("Enter profile title (e.g. Godari Baby Set, Sarees, Kurtis):");
+    const name = prompt("Enter profile title (e.g. Baby Godadi, Festive Sarees, Kurtis):");
     if (!name || !name.trim()) return;
 
     const newP = {
@@ -56,7 +56,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     saveToStorage();
     renderSidebarList();
     loadProfileToForm(newP);
-    showToast(`CREATED PROFILE "${newP.name.toUpperCase()}"`);
+    showToast(`Created profile "${newP.name}".`);
   });
 
   // Duplicate profile
@@ -73,7 +73,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     saveToStorage();
     renderSidebarList();
     loadProfileToForm(cloned);
-    showToast(`DUPLICATED INTO "${cloned.name.toUpperCase()}"`);
+    showToast(`Duplicated into "${cloned.name}".`);
   });
 
   // Delete profile
@@ -94,7 +94,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     saveToStorage();
     renderSidebarList();
     loadProfileToForm(editingProfile);
-    showToast("PROFILE DELETED.");
+    showToast("Profile deleted.");
   });
 
   // Set / Toggle Default Active Profile (Enable / Disable)
@@ -107,14 +107,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       saveToStorage();
       renderSidebarList();
       updateHeaderStatus();
-      showToast(`DEFAULT DISABLED FOR "${editingProfile.name.toUpperCase()}".`);
+      showToast(`Default disabled for "${editingProfile.name}".`);
     } else {
       // Enable as default
       activeProfileId = editingProfile.id;
       saveToStorage();
       renderSidebarList();
       updateHeaderStatus();
-      showToast(`"${editingProfile.name.toUpperCase()}" IS NOW ACTIVE DEFAULT.`);
+      showToast(`"${editingProfile.name}" is now the active default.`);
     }
   });
 
@@ -127,16 +127,16 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     saveToStorage();
     renderSidebarList();
-    activeTitle.textContent = editingProfile.name.toUpperCase();
-    activeSubtitle.textContent = `${(editingProfile.category || "General").toUpperCase()} // UPDATED JUST NOW`;
-    showToast("PROFILE CHANGES SAVED SUCCESSFULLY.");
+    activeTitle.textContent = editingProfile.name;
+    activeSubtitle.textContent = `${editingProfile.category || "General"} • Updated just now`;
+    showToast("Profile changes saved successfully.");
   });
 
   // Add custom field row
   btnAddCustomField.addEventListener("click", () => {
     const fieldName = prompt("Enter custom attribute name (e.g. Sleeve Length, Neck Style):");
     if (fieldName === null) return;
-    const finalLabel = fieldName.trim() || "NEW ATTRIBUTE";
+    const finalLabel = fieldName.trim() || "New Attribute";
     const item = addDynamicFieldRow(finalLabel, "");
     if (item) {
       const valInput = item.querySelector(".dyn-val");
@@ -162,7 +162,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    showToast("EXPORTED BACKUP JSON FILE.");
+    showToast("Exported backup JSON file.");
   });
 
   // Backup Import
@@ -190,7 +190,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         editingProfile = profiles.find(p => p.id === activeProfileId) || profiles[0] || null;
         renderSidebarList();
         loadProfileToForm(editingProfile);
-        showToast(`IMPORTED ${profiles.length} PROFILES SUCCESSFULLY.`);
+        showToast(`Imported ${profiles.length} profiles successfully.`);
       } catch (err) {
         alert("Failed to parse JSON backup file: " + err.message);
       }
@@ -221,8 +221,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (profiles.length === 0) {
       profileListEl.innerHTML = `
-        <li style="padding: 28px 16px; color: var(--text-secondary); font-family: var(--font-body); font-size: 13px; font-weight: 500; text-align: center; line-height: 1.6; text-transform: uppercase;">
-          NO PROFILES SAVED YET.<br>CLICK "NEW PROFILE" TO BEGIN.
+        <li style="padding: 28px 16px; color: var(--ink-muted); font-size: 13px; font-weight: 500; text-align: center; line-height: 1.6;">
+          No profiles saved yet.<br>Click "New Profile" to begin.
         </li>
       `;
       return;
@@ -238,14 +238,24 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     filtered.forEach(p => {
       const li = document.createElement("li");
-      li.className = `profile-item ${editingProfile && editingProfile.id === p.id ? "active" : ""}`;
-
+      const isSelected = editingProfile && editingProfile.id === p.id;
       const isActiveDefault = p.id === activeProfileId;
+
+      li.className = `profile-item ${isSelected ? "active" : ""}`;
 
       li.innerHTML = `
         <div class="profile-info">
           <span class="profile-item-name">${escapeHtml(p.name)}</span>
-          <span class="profile-item-sub">${escapeHtml((p.category || "General").toUpperCase())}</span>
+          <span class="profile-item-sub">${escapeHtml(p.category || "General")}</span>
+        </div>
+        <div class="profile-item-badge">
+          ${isActiveDefault ? `
+            <span class="badge-default-star" title="Active Default Profile">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+              </svg>
+            </span>
+          ` : ""}
         </div>
       `;
 
@@ -281,15 +291,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   function loadProfileToForm(p) {
     if (!p) {
-      activeTitle.textContent = "NO PROFILE SELECTED";
-      activeSubtitle.textContent = "CREATE A PROFILE OR CAPTURE ONE FROM A LISTING FORM";
+      activeTitle.textContent = "No Profile Selected";
+      activeSubtitle.textContent = "Create a profile or capture one from a listing form";
       activeStatusBadge.style.display = "none";
       clearForm();
       return;
     }
 
-    activeTitle.textContent = p.name.toUpperCase();
-    activeSubtitle.textContent = `${(p.category || "General").toUpperCase()} // ID: ${p.id}`;
+    activeTitle.textContent = p.name;
+    activeSubtitle.textContent = `${p.category || "General"} • Ready for listing`;
     updateHeaderStatus();
 
     document.getElementById("profile-name-input").value = p.name || "";
@@ -358,23 +368,23 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const isDefault = (editingProfile.id === activeProfileId);
     if (isDefault) {
-      btnSetDefault.className = "btn-default-dark";
+      btnSetDefault.className = "btn-tool btn-default-active";
       btnSetDefault.innerHTML = `
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5">
           <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
         </svg>
-        <span>DEFAULT</span>
+        <span>Default</span>
       `;
       btnSetDefault.title = "Default profile is active (click to disable)";
     } else {
-      btnSetDefault.className = "btn-secondary";
+      btnSetDefault.className = "btn-tool";
       btnSetDefault.innerHTML = `
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
         </svg>
-        <span>SET DEFAULT</span>
+        <span>Set Default</span>
       `;
-      btnSetDefault.title = "Click to enable as default profile";
+      btnSetDefault.title = "Click to set as active default profile";
     }
   }
 
@@ -502,7 +512,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (count === 0) {
       dynamicFieldsContainer.innerHTML = `
         <div class="dynamic-empty-state">
-          NO EXTRA DYNAMIC FIELDS ADDED. ALL STANDARD ATTRIBUTES APPEAR ABOVE.
+          No extra custom fields added. All standard attributes appear above.
         </div>
       `;
     }
@@ -517,22 +527,36 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     item.innerHTML = `
       <div class="dyn-label-wrap">
-        <input type="text" class="dyn-key-label" placeholder="FIELD NAME" value="${escapeHtml(label)}" title="Click to edit field name">
-        <button class="btn-remove-dyn" title="Remove Field" type="button" aria-label="Remove Field">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter">
-            <polyline points="3 6 5 6 21 6"></polyline>
-            <path d="M19 6v14H7V6m3 0V4h4v2"></path>
-          </svg>
-        </button>
+        <input type="text" class="dyn-key-label" placeholder="Attribute Name" value="${escapeHtml(label)}" title="Click to edit attribute name">
+        <div class="dyn-actions">
+          <button class="btn-edit-dyn" title="Edit attribute name" type="button" aria-label="Edit Field Name">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+          </button>
+          <button class="btn-remove-dyn" title="Remove Field" type="button" aria-label="Remove Field">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+          </button>
+        </div>
       </div>
-      <input type="text" class="input dyn-val" placeholder="Enter ${escapeHtml(label ? label.toUpperCase() : 'value')}" value="${escapeHtml(value)}">
+      <input type="text" class="input dyn-val" placeholder="Enter ${escapeHtml(label ? label : 'value')}" value="${escapeHtml(value)}">
     `;
 
     const keyInput = item.querySelector(".dyn-key-label");
     const valInput = item.querySelector(".dyn-val");
+    const editBtn = item.querySelector(".btn-edit-dyn");
+
+    editBtn?.addEventListener("click", () => {
+      keyInput.focus();
+      keyInput.select();
+    });
 
     keyInput.addEventListener("input", (e) => {
-      const val = e.target.value.trim().toUpperCase();
+      const val = e.target.value.trim();
       valInput.placeholder = val ? `Enter ${val}` : "Enter value";
     });
 
@@ -541,7 +565,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (dynamicFieldsContainer.querySelectorAll(".dynamic-field-item, .dynamic-field-row").length === 0) {
         dynamicFieldsContainer.innerHTML = `
           <div class="dynamic-empty-state">
-            NO EXTRA DYNAMIC FIELDS ADDED. ALL STANDARD ATTRIBUTES APPEAR ABOVE.
+            No extra custom fields added. All standard attributes appear above.
           </div>
         `;
       }

@@ -1,29 +1,32 @@
-/* OrderBuddy — VoiceBox Editorial Design System (content.css) */
+/* ==========================================================================
+   OrderBuddy - Content Script Styles
+   Design System: Skylearn (Warm, accessible, rounded, friendly edtech aesthetic)
+   ========================================================================== */
 
-/* Transient green glow for filled fields on target website */
+/* Transient leaf glow for autofilled fields on target website */
 @keyframes meeshoPulseGlow {
   0% {
-    box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.7);
-    border-color: #16A34A !important;
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6);
+    border-color: #22C55E !important;
   }
   50% {
-    box-shadow: 0 0 0 6px rgba(22, 163, 74, 0.25);
-    border-color: #16A34A !important;
-    background-color: rgba(22, 163, 74, 0.08) !important;
+    box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.2);
+    border-color: #22C55E !important;
+    background-color: rgba(220, 252, 231, 0.35) !important;
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(22, 163, 74, 0);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
   }
 }
 
 .meesho-dropdown-filling {
-  outline: 2px solid #0A0A0A !important;
+  outline: 2px solid #3B82F6 !important;
   outline-offset: -2px !important;
 }
 
 .meesho-autofill-highlight {
-  animation: meeshoPulseGlow 2.2s ease-in-out !important;
-  transition: all 0.3s ease;
+  animation: meeshoPulseGlow 2s ease-in-out !important;
+  transition: all 0.25s ease;
 }
 
 /* Suppress legacy floating toggle tab */
@@ -42,10 +45,10 @@
 
 /* Sidebar Host Container */
 #meesho-autolisting-host {
-  font-family: "Work Sans", -apple-system, "Segoe UI", Helvetica, sans-serif !important;
-  font-size: 13px !important;
-  line-height: 1.6 !important;
-  color: #0A0A0A !important;
+  font-family: "Atkinson Hyperlegible", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+  color: #0F172A !important;
   position: relative !important;
   z-index: 2147483640 !important;
   -webkit-font-smoothing: antialiased;
@@ -56,27 +59,28 @@
   position: fixed !important;
   top: 0 !important;
   right: 0 !important;
-  width: 380px !important;
+  width: 390px !important;
   height: 100vh !important;
-  background: #FAFAFA !important;
-  box-shadow: none !important;
-  border-left: 2px solid #0A0A0A !important;
+  background: #FFFFFF !important;
+  box-shadow: -8px 0 32px rgba(15, 23, 42, 0.08) !important;
+  border-left: 1px solid #E2E8F0 !important;
+  border-top-left-radius: 20px !important;
+  border-bottom-left-radius: 20px !important;
   z-index: 2147483642 !important;
   display: flex !important;
   flex-direction: column !important;
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  transition: transform 0.26s cubic-bezier(0.34, 1.2, 0.64, 1) !important;
   overflow: hidden !important;
   box-sizing: border-box !important;
-  border-radius: 0px !important;
 }
 
 #meesho-sidebar-panel * {
   box-sizing: border-box !important;
-  border-radius: 0px !important;
+  font-family: inherit !important;
 }
 
 #meesho-sidebar-panel.closed {
-  transform: translateX(100%) !important;
+  transform: translateX(102%) !important;
 }
 
 #meesho-sidebar-panel.open {
@@ -88,8 +92,8 @@
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  background: #FAFAFA !important;
-  border-bottom: 2px solid #0A0A0A !important;
+  background: #E9F2FB !important;
+  border-bottom: 1px solid #D2E2F2 !important;
   padding: 16px 20px !important;
   flex-shrink: 0 !important;
   gap: 12px !important;
@@ -98,20 +102,21 @@
 .meesho-sb-brand {
   display: flex !important;
   align-items: center !important;
-  gap: 10px !important;
+  gap: 12px !important;
 }
 
 .brand-icon-box {
-  width: 32px !important;
-  height: 32px !important;
-  border-radius: 0px !important;
-  background: #FFFFFF !important;
-  border: 2px solid #0A0A0A !important;
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 12px !important;
+  background: #EFF6FF !important;
+  border: 1px solid #DBEAFE !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   overflow: hidden !important;
-  padding: 2px !important;
+  padding: 5px !important;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.08) !important;
 }
 
 .meesho-sb-logo-img {
@@ -127,21 +132,19 @@
 }
 
 .brand-title {
-  font-family: "Archivo Black", Impact, sans-serif !important;
-  font-size: 15px !important;
-  letter-spacing: -0.02em !important;
-  color: #0A0A0A !important;
-  line-height: 1.1 !important;
+  font-family: "Nunito", "Atkinson Hyperlegible", -apple-system, sans-serif !important;
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  color: #0F172A !important;
+  line-height: 1.2 !important;
+  letter-spacing: -0.01em !important;
 }
 
 .brand-tag {
-  font-family: "Space Mono", monospace !important;
-  font-size: 9.5px !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.08em !important;
-  color: #EF4444 !important;
-  text-transform: uppercase !important;
-  margin-top: 2px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #3B82F6 !important;
+  margin-top: 1px !important;
 }
 
 .meesho-sb-header-actions {
@@ -151,52 +154,51 @@
 }
 
 .meesho-header-btn {
-  background: transparent !important;
-  border: 2px solid #0A0A0A !important;
-  color: #0A0A0A !important;
-  border-radius: 0px !important;
-  padding: 6px 10px !important;
-  font-family: "Work Sans", sans-serif !important;
-  font-size: 11px !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.06em !important;
-  text-transform: uppercase !important;
+  background: #F8FAFC !important;
+  border: 1px solid #E2E8F0 !important;
+  color: #475569 !important;
+  border-radius: 999px !important;
+  padding: 7px 12px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
   cursor: pointer !important;
-  display: flex !important;
+  display: inline-flex !important;
   align-items: center !important;
-  gap: 5px !important;
-  transition: all 0.15s ease !important;
+  gap: 6px !important;
+  transition: all 0.18s ease !important;
 }
 
 .meesho-header-btn:hover {
-  background: #0A0A0A !important;
-  color: #FAFAFA !important;
+  background: #EFF6FF !important;
+  border-color: #BFDBFE !important;
+  color: #1D4ED8 !important;
 }
 
 .meesho-icon-btn {
-  background: transparent !important;
-  border: 2px solid #0A0A0A !important;
-  color: #0A0A0A !important;
-  border-radius: 0px !important;
+  background: #F8FAFC !important;
+  border: 1px solid #E2E8F0 !important;
+  color: #64748B !important;
+  border-radius: 999px !important;
   width: 32px !important;
   height: 32px !important;
   cursor: pointer !important;
-  display: flex !important;
+  display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  transition: all 0.15s ease !important;
+  transition: all 0.18s ease !important;
 }
 
 .meesho-icon-btn:hover {
-  background: #0A0A0A !important;
-  color: #FAFAFA !important;
+  background: #F1F5F9 !important;
+  color: #0F172A !important;
+  border-color: #CBD5E1 !important;
 }
 
 /* Profile Selector Bar */
 .meesho-sb-profile-bar {
   padding: 14px 20px !important;
-  background: #F5F5F5 !important;
-  border-bottom: 2px solid #0A0A0A !important;
+  background: #F0F6FC !important;
+  border-bottom: 1px solid #D2E2F2 !important;
   flex-shrink: 0 !important;
 }
 
@@ -205,22 +207,18 @@
   justify-content: space-between !important;
   align-items: center !important;
   margin-bottom: 8px !important;
-  font-family: "Work Sans", sans-serif !important;
-  font-size: 11px !important;
+  font-size: 12px !important;
   font-weight: 700 !important;
-  letter-spacing: 0.12em !important;
-  text-transform: uppercase !important;
-  color: #0A0A0A !important;
+  color: #475569 !important;
+  letter-spacing: 0.02em !important;
 }
 
 .profile-pill {
-  background: #0A0A0A !important;
-  border: 1px solid #0A0A0A !important;
-  color: #FAFAFA !important;
-  font-family: "Space Mono", monospace !important;
-  padding: 2px 7px !important;
-  border-radius: 0px !important;
-  font-size: 10px !important;
+  background: #DBEAFE !important;
+  color: #1D4ED8 !important;
+  padding: 2px 9px !important;
+  border-radius: 999px !important;
+  font-size: 11px !important;
   font-weight: 700 !important;
 }
 
@@ -233,43 +231,48 @@
   flex: 1 !important;
   height: 42px !important;
   padding: 8px 12px !important;
-  border: 2px solid #D4D4D4 !important;
-  border-radius: 0px !important;
-  background: #FAFAFA !important;
-  font-family: "Work Sans", sans-serif !important;
-  font-size: 13px !important;
+  border: 1px solid #CBD5E1 !important;
+  border-radius: 12px !important;
+  background: #FFFFFF !important;
+  font-size: 13.5px !important;
   font-weight: 600 !important;
-  color: #0A0A0A !important;
+  color: #0F172A !important;
   outline: none !important;
   cursor: pointer !important;
-  transition: border-color 0.15s ease !important;
+  transition: all 0.18s ease !important;
 }
 
 .meesho-sb-select:focus {
-  border-color: #0A0A0A !important;
-  box-shadow: 0 0 0 2px #FAFAFA, 0 0 0 4px #0A0A0A !important;
+  border-color: #3B82F6 !important;
+  box-shadow: 0 0 0 3px #DBEAFE !important;
 }
 
 .meesho-sb-btn-add {
-  background: #0A0A0A !important;
-  border: 2px solid #0A0A0A !important;
-  color: #FAFAFA !important;
-  border-radius: 0px !important;
+  background: #3B82F6 !important;
+  border: none !important;
+  color: #FFFFFF !important;
+  border-radius: 12px !important;
   width: 42px !important;
   height: 42px !important;
   cursor: pointer !important;
-  display: flex !important;
+  display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  transition: all 0.15s ease !important;
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.25) !important;
+  transition: all 0.18s ease !important;
 }
 
 .meesho-sb-btn-add:hover {
-  background: #EF4444 !important;
-  border-color: #EF4444 !important;
+  background: #2563EB !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.35) !important;
 }
 
-/* Actions Section */
+.meesho-sb-btn-add:active {
+  transform: translateY(0) scale(0.97) !important;
+}
+
+/* Primary Action Center */
 .meesho-sb-actions {
   padding: 16px 20px 10px !important;
   display: flex !important;
@@ -280,124 +283,151 @@
 
 .meesho-btn-autofill {
   width: 100% !important;
-  display: flex !important;
+  min-height: 46px !important;
+  display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   gap: 8px !important;
-  background: #0A0A0A !important;
-  color: #FAFAFA !important;
-  border: 2px solid #0A0A0A !important;
-  border-radius: 0px !important;
-  padding: 12px 18px !important;
-  font-family: "Work Sans", sans-serif !important;
-  font-size: 13px !important;
+  background: #3B82F6 !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  border-radius: 14px !important;
+  padding: 12px 20px !important;
+  font-size: 14px !important;
   font-weight: 700 !important;
-  letter-spacing: 0.06em !important;
-  text-transform: uppercase !important;
   cursor: pointer !important;
-  box-shadow: none !important;
-  transition: background 0.15s ease, border-color 0.15s ease !important;
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.28) !important;
+  transition: all 0.18s cubic-bezier(0.34, 1.2, 0.64, 1) !important;
 }
 
 .meesho-btn-autofill:hover {
-  background: #EF4444 !important;
-  border-color: #EF4444 !important;
+  background: #2563EB !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 18px rgba(59, 130, 246, 0.38) !important;
+}
+
+.meesho-btn-autofill:active {
+  transform: scale(0.98) !important;
 }
 
 .meesho-btn-autofill:disabled {
-  opacity: 0.35 !important;
+  opacity: 0.45 !important;
   cursor: not-allowed !important;
-  background: #0A0A0A !important;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 .meesho-btn-autofill.btn-stopping {
-  background: #EF4444 !important;
-  border-color: #EF4444 !important;
-  color: #FAFAFA !important;
-  animation: pulse-stop 1.2s infinite alternate !important;
-}
-
-@keyframes pulse-stop {
-  from { opacity: 1; }
-  to { opacity: 0.85; }
+  background: #F87171 !important;
+  box-shadow: 0 4px 14px rgba(248, 113, 113, 0.3) !important;
 }
 
 .meesho-btn-capture {
   width: 100% !important;
-  background: transparent !important;
-  border: 2px solid #0A0A0A !important;
-  color: #0A0A0A !important;
-  border-radius: 0px !important;
+  min-height: 42px !important;
+  background: #FFFFFF !important;
+  border: 1px solid #CBD5E1 !important;
+  color: #334155 !important;
+  border-radius: 12px !important;
   padding: 10px 16px !important;
-  font-family: "Work Sans", sans-serif !important;
-  font-size: 12px !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.06em !important;
-  text-transform: uppercase !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
   cursor: pointer !important;
-  display: flex !important;
+  display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 6px !important;
-  transition: all 0.15s ease !important;
+  gap: 8px !important;
+  transition: all 0.18s ease !important;
 }
 
 .meesho-btn-capture:hover {
-  background: #0A0A0A !important;
-  color: #FAFAFA !important;
+  background: #F8FAFC !important;
+  border-color: #94A3B8 !important;
+  color: #0F172A !important;
 }
 
 /* Status Box */
 .meesho-status-box {
-  margin: 0 20px 10px !important;
+  margin: 0 20px 12px !important;
   padding: 10px 14px !important;
-  border-radius: 0px !important;
-  border: 2px solid #0A0A0A !important;
-  border-left: 4px solid #EF4444 !important;
-  background: #FAFAFA !important;
-  font-family: "Space Mono", monospace !important;
-  font-size: 11px !important;
+  border-radius: 12px !important;
+  border: 1px solid #E2E8F0 !important;
+  background: #F8FAFC !important;
+  font-size: 12px !important;
   line-height: 1.5 !important;
   flex-shrink: 0 !important;
   display: flex !important;
-  align-items: flex-start !important;
+  align-items: center !important;
   gap: 8px !important;
 }
 
 .status-box-tag {
   font-weight: 700 !important;
-  color: #EF4444 !important;
+  font-size: 11px !important;
+  padding: 2px 7px !important;
+  border-radius: 999px !important;
+  background: #E2E8F0 !important;
+  color: #475569 !important;
   flex-shrink: 0 !important;
 }
 
-.meesho-status-box.idle {
-  color: #525252 !important;
+.status-text {
+  flex: 1 !important;
+  color: #334155 !important;
+  font-weight: 500 !important;
+}
+
+.meesho-status-box.idle .status-box-tag {
+  background: #E2E8F0 !important;
+  color: #475569 !important;
 }
 
 .meesho-status-box.info {
-  background: #FAFAFA !important;
-  color: #0A0A0A !important;
+  background: #EFF6FF !important;
+  border-color: #BFDBFE !important;
+}
+.meesho-status-box.info .status-box-tag {
+  background: #DBEAFE !important;
+  color: #1D4ED8 !important;
+}
+.meesho-status-box.info .status-text {
+  color: #1E40AF !important;
 }
 
 .meesho-status-box.success {
-  border-left-color: #16A34A !important;
-  color: #16A34A !important;
+  background: #F0FDF4 !important;
+  border-color: #BBF7D0 !important;
 }
 .meesho-status-box.success .status-box-tag {
-  color: #16A34A !important;
+  background: #DCFCE7 !important;
+  color: #166534 !important;
+}
+.meesho-status-box.success .status-text {
+  color: #15803D !important;
 }
 
 .meesho-status-box.warning {
-  border-left-color: #CA8A04 !important;
-  color: #CA8A04 !important;
+  background: #FFFBEB !important;
+  border-color: #FDE68A !important;
 }
 .meesho-status-box.warning .status-box-tag {
-  color: #CA8A04 !important;
+  background: #FEF3C7 !important;
+  color: #B45309 !important;
+}
+.meesho-status-box.warning .status-text {
+  color: #92400E !important;
 }
 
 .meesho-status-box.error {
-  border-left-color: #EF4444 !important;
-  color: #EF4444 !important;
+  background: #FEF2F2 !important;
+  border-color: #FECACA !important;
+}
+.meesho-status-box.error .status-box-tag {
+  background: #FEE2E2 !important;
+  color: #B91C1C !important;
+}
+.meesho-status-box.error .status-text {
+  color: #991B1B !important;
 }
 
 /* Fields Scroll Area */
@@ -413,81 +443,70 @@
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  margin-bottom: 10px !important;
-  padding-bottom: 6px !important;
-  border-bottom: 2px solid #0A0A0A !important;
+  margin-bottom: 12px !important;
+  padding-bottom: 8px !important;
+  border-bottom: 1px solid #E2E8F0 !important;
 }
 
 .header-tag {
-  font-family: "Work Sans", sans-serif !important;
-  font-size: 11px !important;
+  font-size: 12px !important;
   font-weight: 700 !important;
-  letter-spacing: 0.12em !important;
-  color: #0A0A0A !important;
-  text-transform: uppercase !important;
+  color: #475569 !important;
+  letter-spacing: 0.02em !important;
 }
 
 .meesho-text-link {
-  background: transparent !important;
-  border: none !important;
-  color: #0A0A0A !important;
-  font-family: "Work Sans", sans-serif !important;
-  font-size: 11px !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.06em !important;
-  text-transform: uppercase !important;
+  background: #EFF6FF !important;
+  border: 1px solid #DBEAFE !important;
+  color: #2563EB !important;
+  border-radius: 999px !important;
+  padding: 4px 10px !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
   cursor: pointer !important;
-  display: flex !important;
+  display: inline-flex !important;
   align-items: center !important;
-  gap: 4px !important;
-  transition: color 0.15s ease !important;
+  gap: 5px !important;
+  transition: all 0.15s ease !important;
 }
 
 .meesho-text-link:hover {
-  color: #EF4444 !important;
+  background: #DBEAFE !important;
+  color: #1D4ED8 !important;
 }
 
 .meesho-empty-fields-state {
   text-align: center !important;
   padding: 32px 16px !important;
-  color: #525252 !important;
-  background: #F5F5F5 !important;
-  border: 2px dashed #D4D4D4 !important;
-  border-radius: 0px !important;
+  color: #64748B !important;
+  background: #F8FAFC !important;
+  border: 1.5px dashed #CBD5E1 !important;
+  border-radius: 16px !important;
 }
 
 .empty-title {
-  font-family: "Work Sans", sans-serif !important;
-  font-size: 13px !important;
+  font-size: 13.5px !important;
   font-weight: 700 !important;
-  letter-spacing: 0.04em !important;
-  color: #0A0A0A !important;
-  text-transform: uppercase !important;
-  margin-bottom: 6px !important;
+  color: #334155 !important;
+  margin-bottom: 4px !important;
 }
 
 .empty-desc {
-  font-size: 12px !important;
-  color: #525252 !important;
+  font-size: 12.5px !important;
+  color: #64748B !important;
   line-height: 1.5 !important;
 }
 
 .meesho-field-group {
-  margin-bottom: 14px !important;
+  margin-bottom: 16px !important;
 }
 
 .meesho-group-title {
-  font-family: "Work Sans", sans-serif !important;
-  font-size: 11px !important;
+  font-size: 12.5px !important;
   font-weight: 700 !important;
-  letter-spacing: 0.08em !important;
-  text-transform: uppercase !important;
-  color: #0A0A0A !important;
-  background: #F5F5F5 !important;
-  border: 1px solid #D4D4D4 !important;
-  padding: 4px 8px !important;
-  border-radius: 0px !important;
+  color: #0F172A !important;
   margin-bottom: 8px !important;
+  display: block !important;
 }
 
 .meesho-field-row {
@@ -501,16 +520,13 @@
   display: flex !important;
   justify-content: space-between !important;
   align-items: center !important;
-  margin-bottom: 6px !important;
+  margin-bottom: 4px !important;
 }
 
 .field-label-text {
-  font-family: "Work Sans", sans-serif !important;
-  font-size: 11px !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.04em !important;
-  text-transform: uppercase !important;
-  color: #0A0A0A !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #475569 !important;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
@@ -520,14 +536,14 @@
 .btn-remove-row {
   background: transparent !important;
   border: none !important;
-  color: #A3A3A3 !important;
+  color: #94A3B8 !important;
   cursor: pointer !important;
   padding: 2px !important;
-  display: flex !important;
+  border-radius: 4px !important;
+  display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  border-radius: 0px !important;
-  transition: color 0.15s ease !important;
+  transition: all 0.15s ease !important;
 }
 
 .btn-remove-row:hover {
@@ -537,53 +553,54 @@
 .field-val-input {
   width: 100% !important;
   height: 38px !important;
-  padding: 6px 10px !important;
-  border: 2px solid #D4D4D4 !important;
-  border-radius: 0px !important;
-  font-family: "Work Sans", sans-serif !important;
+  padding: 6px 12px !important;
+  border: 1px solid #CBD5E1 !important;
+  border-radius: 8px !important;
   font-size: 13px !important;
-  color: #0A0A0A !important;
-  background: #FAFAFA !important;
+  color: #0F172A !important;
+  background: #FFFFFF !important;
   outline: none !important;
-  transition: border-color 0.15s ease !important;
+  transition: all 0.15s ease !important;
 }
 
 .field-val-input:focus {
-  border-color: #0A0A0A !important;
-  box-shadow: 0 0 0 2px #FAFAFA, 0 0 0 4px #0A0A0A !important;
+  border-color: #3B82F6 !important;
+  box-shadow: 0 0 0 2px #DBEAFE !important;
 }
 
 /* Footer */
 .meesho-sb-footer {
-  padding: 16px 20px 24px !important;
-  background: #FAFAFA !important;
-  border-top: 2px solid #0A0A0A !important;
+  padding: 16px 20px 20px !important;
+  background: #FFFFFF !important;
+  border-top: 1px solid #E2E8F0 !important;
   flex-shrink: 0 !important;
 }
 
 .meesho-btn-save-profile {
   width: 100% !important;
-  background: #0A0A0A !important;
-  border: 2px solid #0A0A0A !important;
-  color: #FAFAFA !important;
-  border-radius: 0px !important;
+  background: #3B82F6 !important;
+  border: none !important;
+  color: #FFFFFF !important;
+  border-radius: 12px !important;
   padding: 12px 18px !important;
-  font-family: "Work Sans", sans-serif !important;
-  font-size: 13px !important;
+  font-size: 13.5px !important;
   font-weight: 700 !important;
-  letter-spacing: 0.06em !important;
-  text-transform: uppercase !important;
   cursor: pointer !important;
-  display: flex !important;
+  display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   gap: 8px !important;
-  transition: background 0.15s ease, border-color 0.15s ease !important;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25) !important;
+  transition: all 0.18s ease !important;
 }
 
 .meesho-btn-save-profile:hover {
-  background: #EF4444 !important;
-  border-color: #EF4444 !important;
+  background: #2563EB !important;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35) !important;
+}
+
+.meesho-btn-save-profile:active {
+  transform: scale(0.98) !important;
 }
 
 /* Custom Scrollbar */
@@ -592,14 +609,14 @@
 }
 
 .meesho-sb-fields-container::-webkit-scrollbar-track {
-  background: #F5F5F5 !important;
+  background: #F8FAFC !important;
 }
 
 .meesho-sb-fields-container::-webkit-scrollbar-thumb {
-  background: #0A0A0A !important;
-  border-radius: 0px !important;
+  background: #CBD5E1 !important;
+  border-radius: 999px !important;
 }
 
 .meesho-sb-fields-container::-webkit-scrollbar-thumb:hover {
-  background: #EF4444 !important;
+  background: #94A3B8 !important;
 }
