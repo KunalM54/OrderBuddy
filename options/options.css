@@ -22,8 +22,8 @@
   --coral-soft: #FEE2E2;
 
   --bg-page: #FFFFFF;
-  --bg-sidebar: #F0F6FC;       /* Distinct soft blue shade for sidebar */
-  --bg-header: #E9F2FB;        /* Distinct soft blue shade for top navbar */
+  --bg-sidebar: #D6E7F8;       /* Unified soft blue shade matching navbar and extension header */
+  --bg-header: #D6E7F8;        /* Unified soft blue shade for top navbar */
   --bg-input: #FFFFFF;
 
   --ink: #0F172A;
@@ -31,8 +31,8 @@
   --ink-subtle: #64748B;
   --ink-faint: #CBD5E1;
 
-  --outline: #D2E2F2;          /* Clean soft blue-gray border */
-  --outline-strong: #94A3B8;
+  --outline: #BAD1E8;          /* Crisp soft blue border for clear visual separation */
+  --outline-strong: #8BAFD3;
 
   --font-display: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-body: "Atkinson Hyperlegible", -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif;
@@ -448,7 +448,7 @@ button:disabled {
 .single-page-container {
   flex: 1;
   overflow-y: auto;
-  padding: 40px 24px 80px;
+  padding: 40px 32px 90px;
   display: flex;
   flex-direction: column;
   align-items: center;     /* Centers all sections horizontally! */
@@ -456,18 +456,18 @@ button:disabled {
   background-color: var(--bg-page);
 }
 
-/* Section Wrapper - Centered & Constrained Width */
+/* Section Wrapper - Centered & Comfortably Sized */
 .form-section {
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 628px;        /* Matches 300px + 28px + 300px perfectly */
+  max-width: 780px;        /* Increased center container width so everything is comfortably bigger and easier to see */
 }
 
 /* Section Title - Bold, Clear Blue with Increased Prominence */
 .section-title {
   font-family: var(--font-display);
-  font-size: 16px;
+  font-size: 17.5px;
   font-weight: 800;
   color: var(--sky);       /* Blue section heading */
   margin-bottom: 16px;
@@ -491,13 +491,13 @@ button:disabled {
   background: #FFFFFF;
   border: 1px solid var(--sky);
   color: var(--sky);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 5px 12px;
+  gap: 6px;
+  padding: 6px 14px;
   border-radius: var(--radius-xs);
   transition: all 0.15s ease;
 }
@@ -506,17 +506,17 @@ button:disabled {
   background: var(--sky-tint);
 }
 
-/* Compact 2-Column & 3-Column Grids */
+/* Fluid 2-Column & 3-Column Grids */
 .form-grid-2 {
   display: grid;
-  grid-template-columns: 300px 300px;
-  gap: 16px 28px;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px 32px;
 }
 
 .form-grid-3 {
   display: grid;
-  grid-template-columns: repeat(3, 190px);
-  gap: 16px 29px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px 24px;
 }
 
 .grid-col-span-2 {
@@ -526,12 +526,12 @@ button:disabled {
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 7px;
 }
 
 /* Increased Label Size */
 .form-group label {
-  font-size: 13.5px;
+  font-size: 14.5px;
   font-weight: 600;
   color: var(--ink-muted);
 }
@@ -543,21 +543,21 @@ button:disabled {
 /* Increased Input Box Size & Clean Font */
 .input {
   width: 100%;
-  max-width: 300px;
-  height: 42px;
-  padding: 8px 14px;
+  max-width: 100%;
+  height: 46px;
+  padding: 10px 16px;
   background-color: var(--bg-input);
   border: 1.5px solid #CBD5E1;
   border-radius: var(--radius-sm);
   font-family: var(--font-body);
-  font-size: 14.5px;
+  font-size: 15px;
   color: var(--ink);
   outline: none;
   transition: all 0.15s ease;
 }
 
 .input-full {
-  max-width: 628px;
+  max-width: 100%;
 }
 
 .input:focus {
@@ -567,24 +567,25 @@ button:disabled {
 
 .textarea {
   height: auto;
-  min-height: 84px;
+  min-height: 96px;
   resize: vertical;
   line-height: 1.5;
-  padding: 10px 14px;
+  padding: 12px 16px;
+  font-size: 15px;
 }
 
 /* Custom & Captured Fields List */
 .dynamic-fields-list {
   display: grid;
-  grid-template-columns: 300px 300px;
-  gap: 16px 28px;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px 32px;
 }
 
 .dynamic-field-item {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  width: 300px;
+  gap: 7px;
+  width: 100%;
 }
 
 .dyn-label-wrap {
@@ -592,12 +593,12 @@ button:disabled {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  height: 22px;
+  min-height: 24px;
 }
 
-/* Clean Label with No Dashed Underline (----- Removed) */
+/* Clean Label with No Dashed Underline - Opens Chrome Prompt to Edit */
 .dyn-key-label {
-  font-size: 13.5px;
+  font-size: 14.5px;
   font-weight: 600;
   color: var(--ink-muted);
   background: transparent;
@@ -606,6 +607,12 @@ button:disabled {
   margin: 0;
   outline: none;
   flex: 1;
+  cursor: pointer;
+  user-select: none;
+}
+
+.dyn-key-label:hover {
+  color: var(--sky);
 }
 
 .dyn-key-label:focus {

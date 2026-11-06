@@ -527,7 +527,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     item.innerHTML = `
       <div class="dyn-label-wrap">
-        <input type="text" class="dyn-key-label" placeholder="Attribute Name" value="${escapeHtml(label)}" title="Click to edit attribute name">
+        <input type="text" class="dyn-key-label" placeholder="Attribute Name" value="${escapeHtml(label)}" readonly title="Click pencil to edit attribute name">
         <div class="dyn-actions">
           <button class="btn-edit-dyn" title="Edit attribute name" type="button" aria-label="Edit Field Name">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -550,15 +550,23 @@ document.addEventListener("DOMContentLoaded", async () => {
     const valInput = item.querySelector(".dyn-val");
     const editBtn = item.querySelector(".btn-edit-dyn");
 
-    editBtn?.addEventListener("click", () => {
-      keyInput.focus();
-      keyInput.select();
-    });
+    const promptForLabelEdit = () => {
+      const oldName = keyInput.value.trim();
+      const newName = prompt("Edit attribute name:", oldName);
+      if (newName === null) {
+        // Cancel was clicked: keep old name
+        return;
+      }
+      const trimmed = newName.trim();
+      if (trimmed) {
+        // User entered a new name: replace new name
+        keyInput.value = trimmed;
+        valInput.placeholder = `Enter ${trimmed}`;
+      }
+    };
 
-    keyInput.addEventListener("input", (e) => {
-      const val = e.target.value.trim();
-      valInput.placeholder = val ? `Enter ${val}` : "Enter value";
-    });
+    editBtn?.addEventListener("click", promptForLabelEdit);
+    keyInput.addEventListener("click", promptForLabelEdit);
 
     item.querySelector(".btn-remove-dyn").addEventListener("click", () => {
       item.remove();

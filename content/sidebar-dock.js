@@ -159,7 +159,7 @@ window.MeeshoSidebar = (() => {
         <!-- Live Status Banner -->
         <div id="meesho-sb-status" class="meesho-status-box idle">
           <span class="status-box-tag">Status</span>
-          <span class="status-text">${activeProfile ? `Ready for "${escapeHtml(activeProfile.name)}"` : "Select or create a profile to start"}</span>
+          <span class="status-text"></span>
         </div>
 
         <!-- Unified Fields Editor -->
@@ -245,12 +245,20 @@ window.MeeshoSidebar = (() => {
             <div class="meesho-field-row" data-field-key="${escapeHtml(f.key)}">
               <div class="field-label-wrap">
                 <span class="field-label-text">${escapeHtml(f.label)}</span>
-                <button class="btn-remove-row" title="Remove Field" type="button" aria-label="Remove Field">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="3 6 5 6 21 6"></polyline>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                  </svg>
-                </button>
+                <div class="field-label-actions">
+                  <button class="btn-edit-row" title="Edit attribute name" type="button" aria-label="Edit Field Name">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                  </button>
+                  <button class="btn-remove-row" title="Remove Field" type="button" aria-label="Remove Field">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                  </button>
+                </div>
               </div>
               <input type="text" class="field-val-input" value="${escapeHtml(f.val)}" placeholder="Enter ${escapeHtml(f.label)}">
             </div>
@@ -484,6 +492,35 @@ window.MeeshoSidebar = (() => {
       }
     });
 
+    // Row edit buttons (opens Chrome prompt popup)
+    sidebarHost.querySelectorAll(".btn-edit-row").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        const row = e.target.closest(".meesho-field-row");
+        const key = row?.getAttribute("data-field-key");
+        const labelSpan = row?.querySelector(".field-label-text");
+        const valInput = row?.querySelector(".field-val-input");
+        const oldName = labelSpan?.textContent?.trim() || "";
+        const newName = prompt("Edit attribute name:", oldName);
+        if (newName === null) {
+          // Cancel clicked: keep old name
+          return;
+        }
+        const trimmed = newName.trim();
+        if (trimmed) {
+          if (labelSpan) labelSpan.textContent = trimmed;
+          if (valInput) valInput.placeholder = `Enter ${trimmed}`;
+          const profile = getActiveProfile();
+          if (profile && profile.fields && key) {
+            if (typeof profile.fields[key] === "object" && profile.fields[key] !== null) {
+              profile.fields[key].label = trimmed;
+            } else {
+              profile.fields[key] = { label: trimmed, value: profile.fields[key] };
+            }
+          }
+        }
+      });
+    });
+
     // Row remove buttons
     sidebarHost.querySelectorAll(".btn-remove-row").forEach(btn => {
       btn.addEventListener("click", (e) => {
@@ -515,15 +552,31 @@ window.MeeshoSidebar = (() => {
     });
   }
 
+  let statusTimeout = null;
   function setStatus(text, type = "idle") {
     const box = sidebarHost?.querySelector("#meesho-sb-status");
     if (!box) return;
+    if (statusTimeout) {
+      clearTimeout(statusTimeout);
+      statusTimeout = null;
+    }
+    if (!text || type === "idle") {
+      box.className = "meesho-status-box idle";
+      const textEl = box.querySelector(".status-text");
+      if (textEl) textEl.textContent = "";
+      return;
+    }
     box.className = `meesho-status-box ${type}`;
     const textEl = box.querySelector(".status-text");
     if (textEl) {
       textEl.textContent = text;
     } else {
       box.textContent = text;
+    }
+    if (type === "success" || type === "warning") {
+      statusTimeout = setTimeout(() => {
+        if (box) box.className = "meesho-status-box idle";
+      }, 4000);
     }
   }
 

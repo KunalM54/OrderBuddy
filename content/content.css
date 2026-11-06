@@ -63,7 +63,7 @@
   height: 100vh !important;
   background: #FFFFFF !important;
   box-shadow: -8px 0 32px rgba(15, 23, 42, 0.08) !important;
-  border-left: 1px solid #E2E8F0 !important;
+  border-left: 1px solid #BAD1E8 !important;
   border-top-left-radius: 20px !important;
   border-bottom-left-radius: 20px !important;
   z-index: 2147483642 !important;
@@ -92,8 +92,8 @@
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  background: #E9F2FB !important;
-  border-bottom: 1px solid #D2E2F2 !important;
+  background: #D6E7F8 !important;
+  border-bottom: 1px solid #BAD1E8 !important;
   padding: 16px 20px !important;
   flex-shrink: 0 !important;
   gap: 12px !important;
@@ -197,8 +197,8 @@
 /* Profile Selector Bar */
 .meesho-sb-profile-bar {
   padding: 14px 20px !important;
-  background: #F0F6FC !important;
-  border-bottom: 1px solid #D2E2F2 !important;
+  background: #FFFFFF !important;
+  border-bottom: 1px solid #E2E8F0 !important;
   flex-shrink: 0 !important;
 }
 
@@ -377,9 +377,8 @@
   font-weight: 500 !important;
 }
 
-.meesho-status-box.idle .status-box-tag {
-  background: #E2E8F0 !important;
-  color: #475569 !important;
+.meesho-status-box.idle {
+  display: none !important;
 }
 
 .meesho-status-box.info {
@@ -434,7 +433,7 @@
 .meesho-sb-fields-container {
   flex: 1 !important;
   overflow-y: auto !important;
-  padding: 0 20px 14px !important;
+  padding: 0 20px 6px !important;
   display: flex !important;
   flex-direction: column !important;
 }
@@ -533,6 +532,13 @@
   max-width: 280px !important;
 }
 
+.field-label-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+
+.btn-edit-row,
 .btn-remove-row {
   background: transparent !important;
   border: none !important;
@@ -544,6 +550,10 @@
   align-items: center !important;
   justify-content: center !important;
   transition: all 0.15s ease !important;
+}
+
+.btn-edit-row:hover {
+  color: #2563EB !important;
 }
 
 .btn-remove-row:hover {
@@ -570,7 +580,7 @@
 
 /* Footer */
 .meesho-sb-footer {
-  padding: 16px 20px 20px !important;
+  padding: 8px 16px 10px !important;
   background: #FFFFFF !important;
   border-top: 1px solid #E2E8F0 !important;
   flex-shrink: 0 !important;
@@ -581,16 +591,16 @@
   background: #3B82F6 !important;
   border: none !important;
   color: #FFFFFF !important;
-  border-radius: 12px !important;
-  padding: 12px 18px !important;
-  font-size: 13.5px !important;
+  border-radius: 10px !important;
+  padding: 9px 16px !important;
+  font-size: 13px !important;
   font-weight: 700 !important;
   cursor: pointer !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   gap: 8px !important;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25) !important;
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.2) !important;
   transition: all 0.18s ease !important;
 }
 
